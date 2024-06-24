@@ -3,14 +3,6 @@
 
 #include "ast.h"
 
-// Structure pour représenter un symbole (variable ou fonction)
-typedef struct Symbol {
-    char *name;
-    NodeType type;  // Type du symbole (variable, fonction, etc.)
-    TokenType data_type;  // Type de données (int, float, etc.) pour les variables
-    struct Symbol *next;  // Pointeur vers le prochain symbole dans la table des symboles
-} Symbol;
-
 typedef enum {
     NODE_UNKNOWN,       // Noeud inconnu ou non spécifié
     NODE_VAR_DECL,      // Déclaration de variable
@@ -21,6 +13,14 @@ typedef enum {
     NODE_LITERAL        // Littéral
     // Ajoute d'autres types de nœuds au besoin
 } NodeType;
+
+// Structure pour représenter un symbole (variable ou fonction)
+typedef struct Symbol {
+    char *name;
+    NodeType type;  // Type du symbole (variable, fonction, etc.)
+    TokenType data_type;  // Type de données (int, float, etc.) pour les variables
+    struct Symbol *next;  // Pointeur vers le prochain symbole dans la table des symboles
+} Symbol;
 
 // Fonction pour ajouter un symbole à la table des symboles
 void addSymbol(char *name, NodeType type, TokenType data_type);

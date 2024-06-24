@@ -3,6 +3,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+ASTNode *parseExpression(const char *source, int *index) {
+    // TODO: Implémenter l'analyse des expressions
+    return NULL;
+}
+
+ASTNode *parseArguments(const char *source, int *index) {
+    // TODO: Implémenter l'analyse des arguments de fonction
+    return NULL;
+}
+
 // Fonction pour créer un nouveau node AST
 ASTNode *createNode(NodeType type) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
