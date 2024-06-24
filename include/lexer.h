@@ -21,7 +21,8 @@ typedef enum {
     TOKEN_DIFFERENT,
     TOKEN_ET,
     TOKEN_OU,
-    TOKEN_EOF
+    TOKEN_EOF,
+    TOKEN_UNKNOWN
 } TokenType;
 
 typedef struct {

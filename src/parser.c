@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Fonction pour créer un nouveau nœud AST
+// Fonction pour créer un nouveau node AST
 ASTNode *createNode(NodeType type) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = type;
