@@ -4,18 +4,18 @@
 #include <string.h>
 
 Token getNextToken(const char *source, int *index) {
-    while (isspace(source[*index])) (*index)++;
+    while (isspace(source[*index])) (*index)++; //if is space
     if (source[*index] == '\0') return (Token){TOKEN_EOF, NULL};
 
-    if (isdigit(source[*index])) {
+    if (isdigit(source[*index])) { // if is digit
         int start = *index;
         while (isdigit(source[*index])) (*index)++;
         char *text = strndup(&source[start], *index - start);
         return (Token){TOKEN_NOMBRE, text};
     }
 
-    if (isalpha(source[*index])) {
-        int start = *index;
+    if (isalpha(source[*index])) { // if is char
+        int start = *index; //set the first character of the token
         while (isalnum(source[*index])) (*index)++;
         char *text = strndup(&source[start], *index - start);
 
