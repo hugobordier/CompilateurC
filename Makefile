@@ -1,19 +1,24 @@
+# Compilateur
 CC = gcc
 CFLAGS = -Wall -g
+LDFLAGS =
+
+# Répertoires
+SRC_DIR = src
+OBJ_DIR = obj
+INCLUDE_DIR = include
+
+# Cibles
 TARGET = compilateur
-SRCDIR = src
-INCDIR = include
-OBJDIR = obj
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
-SRCS = $(wildcard $(SRCDIR)/*.c)
-OBJS = $(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-
+# Règles
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-$(OBJS):$(OBJDIR)/%.o:$(SRCDIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@ -I$(INCDIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c $< -o $@ -I$(INCLUDE_DIR)
 
-.PHONY: clean
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -f $(OBJ_DIR)/*.o $(TARGET)

@@ -1,6 +1,7 @@
 #include "semantic.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 // Table des symboles
 Symbol *symbolTable = NULL;

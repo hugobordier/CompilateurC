@@ -1,18 +1,7 @@
 #ifndef SEMANTIC_H
 #define SEMANTIC_H
 
-#include "ast.h"
-
-typedef enum {
-    NODE_UNKNOWN,       // Noeud inconnu ou non spécifié
-    NODE_VAR_DECL,      // Déclaration de variable
-    NODE_FUNC_DECL,     // Déclaration de fonction
-    NODE_FUNC_CALL,     // Appel de fonction
-    NODE_ASSIGN,        // Assignation
-    NODE_BINARY_OP,     // Opération binaire
-    NODE_LITERAL        // Littéral
-    // Ajoute d'autres types de nœuds au besoin
-} NodeType;
+#include "ast.h" // Inclure ast.h pour avoir la définition de NodeType
 
 // Structure pour représenter un symbole (variable ou fonction)
 typedef struct Symbol {

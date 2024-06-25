@@ -61,12 +61,3 @@ ASTNode *parse(const char *source) {
     return root;
 }
 
-ASTNode *parseExpression(const char *source, int *index) {
-    // TODO: Implémenter l'analyse des expressions
-    return NULL;
-}
-
-ASTNode *parseArguments(const char *source, int *index) {
-    // TODO: Implémenter l'analyse des arguments de fonction
-    return NULL;
-}
