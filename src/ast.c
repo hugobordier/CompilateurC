@@ -67,15 +67,18 @@ void printASTNode(ASTNode *node) {
             printf("Return Statement:\n");
             printAST(node->data.return_stmt.expr);
             break;
-        case NODE_COMM:
-            printf("Comment: %s\n", node->data.comment.text);
-            break;
-        case NODE_ARRAY:
+        case NODE_ARRAY_DECL:
             printf("Array Declaration:\n");
             printf("Array Name: %s\n", node->data.array_decl.array_name);
             printf("Element Type: %d\n", node->data.array_decl.elem_type);
             printf("Array Size Expression:\n");
             printAST(node->data.array_decl.size);
+            break;
+        case NODE_ARRAY_CALL:
+            printf("Array Access:\n");
+            printf("Array Name: %s\n", node->data.array_access.array_name);
+            printf("Index Expression:\n");
+            printAST(node->data.array_access.index);
             break;
         case NODE_BLOCK:
             printf("Block Statement:\n");

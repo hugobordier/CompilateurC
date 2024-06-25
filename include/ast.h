@@ -62,6 +62,10 @@ typedef struct ASTNode {
         struct {
             Token value;
         } literal;
+        struct {
+            Token value;
+            struct ASTNode* expr;
+        }return_stmt;
     } data;
     struct ASTNode *next; // for node list
 } ASTNode;

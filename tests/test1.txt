@@ -1,4 +1,4 @@
-nombre a = 10; // test                  
+nombre a = 10;                 
 lettres="test";
 fonction(nombre varA){
     varA = varA + 1};
