@@ -37,7 +37,8 @@ typedef enum {
     TOKEN_WHILE,
     TOKEN_TRY,
     TOKEN_CATCH,
-    TOKEN_FONCTION, 
+    TOKEN_FONCTION,
+    TOKEN_COMM, 
     TOKEN_UNKNOWN
 } TokenType;
 

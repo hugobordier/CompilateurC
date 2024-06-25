@@ -7,7 +7,7 @@
 #include "codegen.h"
 
 int main() {
-    const char *source = "nombre a = 10;fonction(nombre varA){varA = varA + 1}; si (a == 10) { fonction(a); }";
+    const char *source = "nombre a = 10 // test;fonction(nombre varA){varA = varA + 1}; si (a == 10) { fonction(a); };";
 
     printf("Lexing:\n");
     printLexer(source);

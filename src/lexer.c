@@ -69,9 +69,15 @@ Token getNextToken(const char *source, int *index) {
         case '+': (*index)++; return (Token){TOKEN_PLUS, strndup("+", 1)};
         case '-': (*index)++; return (Token){TOKEN_MOINS, strndup("-", 1)};
         case '*': (*index)++; return (Token){TOKEN_FOIS, strndup("*", 1)};
-        case '/': (*index)++; return (Token){TOKEN_DIVISION, strndup("/", 1)};
         case '^': (*index)++; return (Token){TOKEN_PUISSANCE, strndup("^", 1)};
         case '%': (*index)++; return (Token){TOKEN_MODULO, strndup("%", 1)};
+        case '/': 
+            (*index)++; 
+            if (source[*index] == '/') {
+                (*index)++;
+                return (Token){TOKEN_COMM, strndup("//", 2)};
+            }
+            return (Token){TOKEN_DIVISION, strndup("/", 1)};
         case '=':
             (*index)++;
             if (source[*index] == '=') {

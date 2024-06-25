@@ -11,6 +11,8 @@ typedef enum {
     NODE_ASSIGN,
     NODE_BINARY_OP,
     NODE_LITERAL,
+    NODE_RETURN,
+    NODE_COMM,
 } NodeType;
 
 typedef struct ASTNode {
