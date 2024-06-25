@@ -41,5 +41,6 @@ typedef struct {
 } Token;
 
 Token getNextToken(const char *source, int *index);
+void printLexer(const char *source);
 
 #endif // LEXER_H

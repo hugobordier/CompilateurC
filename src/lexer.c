@@ -88,3 +88,13 @@ Token getNextToken(const char *source, int *index) {
     (*index)++;
     return (Token){TOKEN_IDENT, strndup("UNKNOWN", 7)};
 }
+
+void printLexer(const char *source) {
+    int index = 0;
+    Token token;
+
+    while ((token = getNextToken(source, &index)).type != TOKEN_EOF) {
+        printf("Token Type: %d, Token Value: %s\n", token.type, token.value);
+        free(token.value); 
+    }
+}
