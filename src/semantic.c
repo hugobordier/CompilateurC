@@ -3,10 +3,8 @@
 #include <string.h>
 #include <stdio.h>
 
-// Table des symboles
 Symbol *symbolTable = NULL;
 
-// Ajouter un symbole à la table des symboles
 void addSymbol(char *name, NodeType type, TokenType data_type) {
     Symbol *symbol = (Symbol *)malloc(sizeof(Symbol));
     symbol->name = strdup(name);
@@ -16,7 +14,6 @@ void addSymbol(char *name, NodeType type, TokenType data_type) {
     symbolTable = symbol;
 }
 
-// Vérifier si un symbole existe dans la table des symboles
 int symbolExists(char *name) {
     Symbol *current = symbolTable;
     while (current != NULL) {
@@ -25,10 +22,10 @@ int symbolExists(char *name) {
         }
         current = current->next;
     }
-    return 0; // Le symbole n'existe pas
+    return 0; // le symbole existe pas
 }
 
-// Obtenir le type d'un symbole
+
 NodeType getSymbolType(char *name) {
     Symbol *current = symbolTable;
     while (current != NULL) {
@@ -37,10 +34,9 @@ NodeType getSymbolType(char *name) {
         }
         current = current->next;
     }
-    return NODE_UNKNOWN; // Symbole non trouvé (type inconnu)
+    return NODE_UNKNOWN; // symbole pas trouvé 
 }
 
-// Libérer la mémoire utilisée par la table des symboles
 void freeSymbolTable() {
     Symbol *current = symbolTable;
     while (current != NULL) {
@@ -52,7 +48,6 @@ void freeSymbolTable() {
     symbolTable = NULL;
 }
 
-// Analyse sémantique
 void analyzeSemantics(ASTNode *root) {
     while (root != NULL) {
         switch (root->type) {
@@ -81,9 +76,7 @@ void analyzeSemantics(ASTNode *root) {
                     printf("Erreur : Assignation à une variable non déclarée : %s\n", root->data.assign.var_name);
                     exit(1);
                 }
-                // Vérifier la compatibilité des types pour l'assignation, par exemple
                 break;
-            // ... autres cas à gérer selon les nœuds de l'AST
             default:
                 break;
         }

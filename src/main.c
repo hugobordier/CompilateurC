@@ -7,7 +7,7 @@
 #include "codegen.h"
 
 int main() {
-    const char *source = "nombre a = 10; si (a == 10) { a = a + 1; }";
+    const char *source = "nombre a = 10;fonction(nombre varA){varA = varA + 1}; si (a == 10) { fonction(a); }";
 
     printf("Lexing:\n");
     printLexer(source);
@@ -22,9 +22,6 @@ int main() {
 
     printf("\nGenerated Code:\n");
     generateCode(ast);
-
-    // Libérer l'AST
-    // TODO: Implémenter la libération de la mémoire de l'AST
 
     return 0;
 }

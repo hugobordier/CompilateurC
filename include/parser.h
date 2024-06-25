@@ -5,4 +5,4 @@
 
 ASTNode *parse(const char *source);
 
-#endif // PARSER_H
+#endif

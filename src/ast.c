@@ -14,7 +14,6 @@ void printAST(ASTNode *root) {
             case NODE_FUNC_CALL:
                 printf("Function Call: %s\n", root->data.func_call.func_name);
                 break;
-            // ... autres types de nœuds
             default:
                 printf("Unknown node type\n");
                 break;

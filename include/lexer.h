@@ -4,7 +4,7 @@
 typedef enum {
     TOKEN_EOF, //end
     TOKEN_IDENT, //variable
-    TOKEN_NOMBRE,// type
+    TOKEN_NOMBRE, // type
     TOKEN_REEL,
     TOKEN_LETTRES,
     TOKEN_LETTRE,
@@ -37,8 +37,10 @@ typedef enum {
     TOKEN_WHILE,
     TOKEN_TRY,
     TOKEN_CATCH,
+    TOKEN_FONCTION, 
     TOKEN_UNKNOWN
 } TokenType;
+
 
 
 
@@ -51,4 +53,4 @@ typedef struct {
 Token getNextToken(const char *source, int *index);
 void printLexer(const char *source);
 
-#endif // LEXER_H
+#endif 
