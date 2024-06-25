@@ -8,7 +8,6 @@ typedef enum {
     TOKEN_REEL,
     TOKEN_LETTRES,
     TOKEN_LETTRE,
-    TOKEN_TYPE_TABLEAU,
     TOKEN_BOOLEAN,
     TOKEN_PLUS, // math
     TOKEN_MOINS,

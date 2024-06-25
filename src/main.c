@@ -6,9 +6,31 @@
 #include "semantic.h"
 #include "codegen.h"
 
-int main() {
-    const char *source = "nombre a = 10 // test;fonction(nombre varA){varA = varA + 1}; si (a == 10) { fonction(a); };";
+char *readFile(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        fprintf(stderr, "Could not open file %s\n", filename);
+        exit(1);
+    }
 
+    fseek(file, 0, SEEK_END);
+    long length = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    char *content = malloc(length + 1);
+    if (!content) {
+        fprintf(stderr, "Could not allocate memory\n");
+        exit(1);
+    }
+
+    fread(content, 1, length, file);
+    content[length] = '\0';
+    fclose(file);
+    return content;
+}
+
+int main() {
+    //const char *source = "nombre a = 10 // test;lettres=\"test\";fonction(nombre varA){varA = varA + 1}; si (a == 10) { fonction(a); };";
+    const char *source = readFile("tests/test1.txt");
     printf("Lexing:\n");
     printLexer(source);
 

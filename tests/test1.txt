@@ -1,0 +1,7 @@
+nombre a = 10; // test
+lettres="test";
+fonction(nombre varA){
+    varA = varA + 1};
+si (a == 10) { 
+    fonction(a);
+    };

@@ -49,7 +49,6 @@ Token getNextToken(const char *source, int *index) {
         if (strcmp(text, "reel") == 0) return (Token){TOKEN_REEL, text};
         if (strcmp(text, "lettres") == 0) return (Token){TOKEN_LETTRES, text};
         if (strcmp(text, "lettre") == 0) return (Token){TOKEN_LETTRE, text};
-        if (strcmp(text, "tableau") == 0) return (Token){TOKEN_TYPE_TABLEAU, text};
         if (strcmp(text, "boolean") == 0) return (Token){TOKEN_BOOLEAN, text};
 
         if (strcmp(text, "si") == 0) return (Token){TOKEN_IF, text};

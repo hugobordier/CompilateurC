@@ -13,16 +13,29 @@ typedef enum {
     NODE_LITERAL,
     NODE_RETURN,
     NODE_COMM,
+    NODE_ARRAY_DECL,
+    NODE_ARRAY_CALL,
+    NODE_BLOCK,
 } NodeType;
 
 typedef struct ASTNode {
     NodeType type;
-    union {
+    union { // union c'est pour que la strucure astNode est un type et UNE des srtuct en plus
         //variable delaration
         struct {
             char *var_name;
             TokenType var_type;
         } var_decl;
+         struct {
+            char *array_name;
+            TokenType elem_type;
+            struct ASTNode *size; // Optional size expression
+        } array_decl;
+        // Array access
+        struct {
+            char *array_name;
+            struct ASTNode *index; // Index expression
+        } array_access;
         //function declaration
         struct {
             char *func_name;
