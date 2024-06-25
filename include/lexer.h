@@ -2,17 +2,15 @@
 #define LEXER_H
 
 typedef enum {
-    TOKEN_EOF,
-    TOKEN_IDENT,
-    TOKEN_NOMBRE,
-    TOKEN_IF,
-    TOKEN_ELSE,
-    TOKEN_ELSEIF,
-    TOKEN_FOR,
-    TOKEN_WHILE,
-    TOKEN_TRY,
-    TOKEN_CATCH,
-    TOKEN_PLUS,
+    TOKEN_EOF, //end
+    TOKEN_IDENT, //variable
+    TOKEN_NOMBRE,// type
+    TOKEN_REEL,
+    TOKEN_LETTRES,
+    TOKEN_LETTRE,
+    TOKEN_TYPE_TABLEAU,
+    TOKEN_BOOLEAN,
+    TOKEN_PLUS, // math
     TOKEN_MOINS,
     TOKEN_FOIS,
     TOKEN_DIVISION,
@@ -31,8 +29,18 @@ typedef enum {
     TOKEN_CROCHET_OUVRANT,
     TOKEN_CROCHET_FERMANT,
     TOKEN_SEMICOLON,
-    TOKEN_COMMA
+    TOKEN_COMMA,
+    TOKEN_IF,
+    TOKEN_ELSE,
+    TOKEN_ELSEIF,
+    TOKEN_FOR,
+    TOKEN_WHILE,
+    TOKEN_TRY,
+    TOKEN_CATCH,
+    TOKEN_UNKNOWN
 } TokenType;
+
+
 
 
 typedef struct {

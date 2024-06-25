@@ -8,6 +8,10 @@
 
 int main() {
     const char *source = "nombre a = 10; si (a == 10) { a = a + 1; }";
+
+    printf("Lexing:\n");
+    printLexer(source);
+
     ASTNode *ast = parse(source);
 
     printf("AST:\n");
