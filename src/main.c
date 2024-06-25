@@ -31,8 +31,8 @@ char *readFile(const char *filename) {
 int main() {
     //const char *source = "nombre a = 10 // test;lettres=\"test\";fonction(nombre varA){varA = varA + 1}; si (a == 10) { fonction(a); };";
     const char *source = readFile("tests/test1.txt");
-    printf("Lexing:\n");
-    printLexer(source);
+    //printf("Lexing:\n");
+    //printLexer(source);
 
     ASTNode *ast = parse(source);
 
