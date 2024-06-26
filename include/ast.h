@@ -2,8 +2,6 @@
 #define AST_H
 
 #include "lexer.h"
-
-// Enum pour représenter les différents types de nœuds dans l'AST
 typedef enum {
     NODE_UNKNOWN,       
     NODE_VAR_DECL,
@@ -18,8 +16,6 @@ typedef enum {
     NODE_ARRAY_ACCESS,
     NODE_BLOCK,
 } NodeType;
-
-// Structure pour représenter un nœud de l'AST
 typedef struct ASTNode {
     NodeType type; // Type du nœud
     union {

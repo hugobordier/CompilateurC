@@ -29,21 +29,21 @@ char *readFile(const char *filename) {
 }
 
 int main() {
-    //const char *source = "nombre a = 10 // test;lettres=\"test\";fonction(nombre varA){varA = varA + 1}; si (a == 10) { fonction(a); };";
-    const char *source = readFile("tests/test1.txt");
-    //printf("Lexing:\n");
-    //printLexer(source);
+    const char *source = "nombre a = 10; a = a /1;";
+    //const char *source = readFile("tests/test1.txt");
+    printf("Lexing:\n");
+    printLexer(source);
 
-    ASTNode *ast = parse(source);
+    //ASTNode *ast = parse(source);
 
-    printf("AST:\n");
-    printAST(ast);
+    //printf("AST:\n");
+    //printAST(ast);
 
     printf("\nSemantic Analysis:\n");
-    analyzeSemantics(ast);
+    //analyzeSemantics(ast);
 
     printf("\nGenerated Code:\n");
-    generateCode(ast);
+    //generateCode(ast);
 
     return 0;
 }

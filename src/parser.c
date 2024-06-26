@@ -75,7 +75,7 @@ ASTNode *parseStatement(const char *source, int *index) {
             return node;
         } else if (next_token.type == TOKEN_CROCHET_OUVRANT) {
             // Array element access
-            ASTNode *node = createNode(NODE_ARRAY_CALL);
+            ASTNode *node = createNode(NODE_ARRAY_ACCESS);
             node->data.array_access.array_name = token.value;
             node->data.array_access.index = parseExpression(source, index); // Parse the index expression
 
@@ -142,9 +142,6 @@ ASTNode *parseBlock(const char *source, int *index) {
 }
 
 ASTNode *parseExpression(const char *source, int *index) {
-    // Implement the logic to parse expressions
-    // This is just a placeholder to demonstrate the structure
-
     Token token = getNextToken(source, index);
     ASTNode *node = NULL;
 
@@ -162,7 +159,7 @@ ASTNode *parseExpression(const char *source, int *index) {
             node->data.func_call.args = parseArguments(source, index);
         } else if (next_token.type == TOKEN_CROCHET_OUVRANT) {
             // Array access
-            node = createNode(NODE_ARRAY_CALL);
+            node = createNode(NODE_ARRAY_ACCESS);
             node->data.array_access.array_name = token.value;
             node->data.array_access.index = parseExpression(source, index); // Parse the index expression
             getNextToken(source, index); // Expecting closing bracket

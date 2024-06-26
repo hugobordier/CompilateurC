@@ -11,9 +11,9 @@ void printNodeType(NodeType type) {
         case NODE_BINARY_OP:     printf("NODE_BINARY_OP"); break;
         case NODE_LITERAL:       printf("NODE_LITERAL"); break;
         case NODE_RETURN:        printf("NODE_RETURN"); break;
-        case NODE_COMM:          printf("NODE_COMM"); break;
+        case NODE_COMMENT:          printf("NODE_COMMENT"); break;
         case NODE_ARRAY_DECL:    printf("NODE_ARRAY_DECL"); break;
-        case NODE_ARRAY_CALL:    printf("NODE_ARRAY_CALL"); break;
+        case NODE_ARRAY_ACCESS:    printf("NODE_ARRAY_ACCESS"); break;
         case NODE_BLOCK:         printf("NODE_BLOCK"); break;
         default:                 printf("UNKNOWN_NODE_TYPE"); break;
     }
@@ -67,7 +67,7 @@ void printASTNode(ASTNode *node) {
             printf("Return Statement:\n");
             printAST(node->data.return_stmt.expr);
             break;
-        case NODE_COMM:
+        case NODE_COMMENT:
             printf("Comment: %s\n", node->data.comment.text);
             break;
         case NODE_ARRAY_DECL:
@@ -77,7 +77,7 @@ void printASTNode(ASTNode *node) {
             printf("Array Size Expression:\n");
             printAST(node->data.array_decl.size);
             break;
-        case NODE_ARRAY_CALL:
+        case NODE_ARRAY_ACCESS:
             printf("Array Access:\n");
             printf("Array Name: %s\n", node->data.array_access.array_name);
             printf("Index Expression:\n");

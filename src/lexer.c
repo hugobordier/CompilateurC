@@ -45,12 +45,14 @@ Token getNextToken(const char *source, int *index) {
         while (isalnum(source[*index])) (*index)++;
         char *text = strndup(&source[start], *index - start);
 
-        if (strcmp(text, "nombre") == 0) return (Token){TOKEN_NOMBRE, text};
-        if (strcmp(text, "reel") == 0) return (Token){TOKEN_REEL, text};
-        if (strcmp(text, "lettres") == 0) return (Token){TOKEN_LETTRES, text};
-        if (strcmp(text, "lettre") == 0) return (Token){TOKEN_LETTRE, text};
-        if (strcmp(text, "boolean") == 0) return (Token){TOKEN_BOOLEAN, text};
+        // Check for types
+        if (strcmp(text, "nombre") == 0) return (Token){TOKEN_TYPE_NOMBRE, text};
+        if (strcmp(text, "reel") == 0) return (Token){TOKEN_TYPE_REEL, text};
+        if (strcmp(text, "lettres") == 0) return (Token){TOKEN_TYPE_LETTRES, text};
+        if (strcmp(text, "lettre") == 0) return (Token){TOKEN_TYPE_LETTRE, text};
+        if (strcmp(text, "boolean") == 0) return (Token){TOKEN_TYPE_BOOLEAN, text};
 
+        // Check for keywords
         if (strcmp(text, "si") == 0) return (Token){TOKEN_IF, text};
         if (strcmp(text, "sinon") == 0) return (Token){TOKEN_ELSE, text};
         if (strcmp(text, "aussisi") == 0) return (Token){TOKEN_ELSEIF, text};
