@@ -67,6 +67,9 @@ void printASTNode(ASTNode *node) {
             printf("Return Statement:\n");
             printAST(node->data.return_stmt.expr);
             break;
+        case NODE_COMM:
+            printf("Comment: %s\n", node->data.comment.text);
+            break;
         case NODE_ARRAY_DECL:
             printf("Array Declaration:\n");
             printf("Array Name: %s\n", node->data.array_decl.array_name);
@@ -82,8 +85,9 @@ void printASTNode(ASTNode *node) {
             break;
         case NODE_BLOCK:
             printf("Block Statement:\n");
+            node = node->next; // Move to the first statement inside the block
             while (node != NULL) {
-                printAST(node);
+                printASTNode(node);
                 node = node->next;
             }
             break;
@@ -92,6 +96,7 @@ void printASTNode(ASTNode *node) {
             break;
     }
 }
+
 
 void printAST(ASTNode *root) {
     if (root == NULL) {
