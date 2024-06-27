@@ -1,6 +1,7 @@
 #ifndef SEMANTIC_H
 #define SEMANTIC_H
 
+#include "lexer.h"
 #include "ast.h" 
 typedef struct Symbol {
     char *name;

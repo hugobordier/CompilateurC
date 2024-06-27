@@ -1,72 +1,63 @@
 #ifndef AST_H
 #define AST_H
 
-#include "lexer.h"
-
 typedef enum {
-    NODE_VAR_DECL,
-    NODE_ASSIGNMENT,
-    NODE_FUNCTION_CALL,
-    NODE_EXPRESSION,
-    NODE_IF_STATEMENT,
-    NODE_WHILE_STATEMENT,
-    NODE_FOR_STATEMENT,
-    NODE_FUNCTION_DECL,
-    NODE_RETURN_STATEMENT,
+    AST_PROGRAM,
+    AST_STATEMENT,
+    AST_EXPRESSION,
+    AST_TERM,
+    AST_FACTOR,
+    AST_IDENTIFIER,
+    AST_CONSTANT,
+    AST_STRING_LITERAL,
+    AST_UNARY_OPERATION,
+    AST_BINARY_OPERATION,
+    AST_CONDITIONAL,
+    AST_FUNCTION_CALL,
+    AST_ASSIGNMENT,
+    AST_TYPE,
+    // Ajoute d'autres types de nœuds selon les besoins
 } ASTNodeType;
 
 typedef struct ASTNode {
     ASTNodeType type;
     union {
-        struct {
-            TokenType var_type;
-            char *var_name;
-            struct ASTNode *initial_value;
-        } var_decl;
-        struct {
-            char *var_name;
-            struct ASTNode *value;
-        } assignment;
-        struct {
-            char *function_name;
-            struct ASTNode **arguments;
-            int arg_count;
-        } function_call;
+        char *identifier;       // Pour AST_IDENTIFIER, AST_FUNCTION_CALL, etc.
+        double constant;        // Pour AST_CONSTANT (nombre réel)
+        char *string_literal;   // Pour AST_STRING_LITERAL
+        struct ASTNode *unary_expr;    // Pour AST_UNARY_OPERATION
         struct {
             struct ASTNode *left;
             struct ASTNode *right;
-            char *operator;
-        } expression;
+            char *operation;
+        } binary_expr;         // Pour AST_BINARY_OPERATION
         struct {
             struct ASTNode *condition;
-            struct ASTNode *then_branch;
-            struct ASTNode *else_branch;
-        } if_statement;
+            struct ASTNode *true_branch;
+            struct ASTNode *false_branch;
+        } conditional;         // Pour AST_CONDITIONAL
         struct {
-            struct ASTNode *condition;
-            struct ASTNode *body;
-        } while_statement;
+            char *name;
+            struct ASTNode **args;
+            int num_args;
+        } function_call;       // Pour AST_FUNCTION_CALL
         struct {
-            struct ASTNode *initializer;
-            struct ASTNode *condition;
-            struct ASTNode *increment;
-            struct ASTNode *body;
-        } for_statement;
+            char *name;
+            struct ASTNode *value;
+        } assignment;          // Pour AST_ASSIGNMENT
         struct {
-            char *function_name;
-            struct ASTNode **parameters;
-            int param_count;
-            struct ASTNode *body;
-        } function_decl;
-        struct {
-            struct ASTNode *return_value;
-        } return_statement;
-    } data;//union called "data"
-    struct ASTNode *next;//add a pointer pointing to the next ASTNode
-    //struct ASTNode *parent;
+            char *name;
+        } type;                // Pour AST_TYPE
+        // Ajoute d'autres membres d'union selon les types de nœuds nécessaires
+    } data;
+    struct ASTNode **children;
+    int childrenCount;
+    char *identifier; // Pour AST_IDENTIFIER
 } ASTNode;
 
-ASTNode *createNode(ASTNodeType type);
-void printASTNode(ASTNode *node);
+ASTNode *createASTNode(ASTNodeType type);
+void addASTChild(ASTNode *parent, ASTNode *child);
+void destroyAST(ASTNode *node);
+void printAST(ASTNode *node, int level);
 
 #endif

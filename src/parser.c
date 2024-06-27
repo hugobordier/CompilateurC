@@ -1,171 +1,219 @@
 #include "parser.h"
 #include "ast.h"
-#include "lexer.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-ASTNode *parseStatement(const char **source, int *index);
-ASTNode *parseExpression(const char **source, int *index);
-ASTNode *parsePrimary(const char **source, int *index);
-ASTNode *parseAssignment(const char **source, int *index);
-ASTNode *parseVarDeclaration(const char **source, int *index);
+ASTNode *parse_expression(Parser *parser);
+ASTNode *parse_term(Parser *parser);
+ASTNode *parse_factor(Parser *parser);
 
-// Function to create a new AST node
-ASTNode *createNode(ASTNodeType type) {
+// Fonction pour créer un parser
+Parser createParser(const char *source) {
+    Parser parser;
+    parser.tokens = tokenize(
+        source); // Supposons que cette fonction tokenize utilise le lexer
+    parser.currentTokenIndex = 0;
+    return parser;
+}
+
+// Fonction pour détruire le parser et libérer les ressources
+void destroyParser(Parser *parser) {
+    free(parser->tokens); // Libérer la mémoire allouée pour les tokens
+}
+
+// Fonction pour récupérer le token courant
+Token getCurrentToken(Parser *parser) {
+    return parser->tokens[parser->currentTokenIndex];
+}
+
+// Fonction pour avancer vers le prochain token
+void advance(Parser *parser) { parser->currentTokenIndex++; }
+
+// Fonction principale pour démarrer l'analyse syntaxique et créer l'AST
+ASTNode *parse(Parser *parser) {
+    return parse_expression(parser); // On commence par analyser une expression
+}
+
+// Fonction pour créer un nœud AST avec un type spécifié
+ASTNode *createASTNode(ASTNodeType type) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = type;
-    node->next = NULL;
-    memset(&node->data, 0, sizeof(node->data));
+    node->children = NULL;
+    node->childrenCount = 0;
     return node;
 }
 
-// Function to parse the source code and create the AST
-ASTNode *parse(const char *source) {
-    int index = 0;
-    ASTNode *root = NULL;
-    ASTNode *current = NULL;
+// Fonction pour ajouter un enfant à un nœud AST
+void addASTChild(ASTNode *parent, ASTNode *child) {
+    parent->children = (ASTNode **)realloc(
+        parent->children, sizeof(ASTNode *) * (parent->childrenCount + 1));
+    parent->children[parent->childrenCount++] = child;
+}
 
-    while (1) {
-        Token token = getNextToken(source, &index);
-        if (token.type == TOKEN_EOF) {
+// Fonction pour détruire un nœud AST et libérer la mémoire récursivement
+void destroyAST(ASTNode *node) {
+    if (node) {
+        for (int i = 0; i < node->childrenCount; i++) {
+            destroyAST(node->children[i]);
+        }
+        free(node->children);
+        free(node);
+    }
+}
+
+// Fonction pour imprimer l'arbre syntaxique abstrait
+void printAST(ASTNode *node, int level) {
+    if (node) {
+        for (int i = 0; i < level; i++) {
+            printf("  ");
+        }
+        switch (node->type) {
+        case AST_IDENTIFIER:
+            printf("Identifier: %s\n", node->data.identifier);
+            break;
+        case AST_CONSTANT:
+            printf("Constant: %f\n", node->data.constant);
+            break;
+        case AST_STRING_LITERAL:
+            printf("String Literal: %s\n", node->data.string_literal);
+            break;
+        case AST_UNARY_OPERATION:
+            printf("Unary Operation\n");
+            printAST(node->data.unary_expr, level + 1);
+            break;
+        case AST_BINARY_OPERATION:
+            printf("Binary Operation\n");
+            printAST(node->data.binary_expr.left, level + 1);
+            printAST(node->data.binary_expr.right, level + 1);
+            break;
+        case AST_CONDITIONAL:
+            printf("Conditional\n");
+            printAST(node->data.conditional.condition, level + 1);
+            printf("True Branch:\n");
+            printAST(node->data.conditional.true_branch, level + 2);
+            printf("False Branch:\n");
+            printAST(node->data.conditional.false_branch, level + 2);
+            break;
+        case AST_FUNCTION_CALL:
+            printf("Function Call: %s\n", node->data.function_call.name);
+            for (int i = 0; i < node->data.function_call.num_args; i++) {
+                printf("Argument %d:\n", i + 1);
+                printAST(node->data.function_call.args[i], level + 1);
+            }
+            break;
+        case AST_ASSIGNMENT:
+            printf("Assignment: %s\n", node->data.assignment.name);
+            printAST(node->data.assignment.value, level + 1);
+            break;
+        case AST_TYPE:
+            printf("Type: %s\n", node->data.type.name);
+            break;
+        // Ajoute d'autres cas selon les types de nœuds nécessaires
+        default:
+            printf("Unknown Node Type\n");
             break;
         }
-        if (token.type == TOKEN_UNKNOWN) {
-            printf("Unknown token: %s\n", token.value);
-            free(token.value);
-            continue;
+        for (int i = 0; i < node->childrenCount; i++) {
+            printAST(node->children[i], level + 1);
         }
+    }
+}
 
-        ASTNode *node = parseStatement(&source, &index);
-        if (node == NULL) {
-            printf("Syntax error at position %d\n", index);
+// Fonction pour analyser une expression
+ASTNode *parse_expression(Parser *parser) {
+    ASTNode *left = parse_term(parser);
+
+    while (getCurrentToken(parser).type == TOKEN_PLUS ||
+           getCurrentToken(parser).type == TOKEN_MOINS) {
+        TokenType op_type = getCurrentToken(parser).type;
+        advance(parser);
+        ASTNode *right = parse_term(parser);
+
+        ASTNode *binary_expr = createASTNode(AST_BINARY_OPERATION);
+        binary_expr->data.binary_expr.left = left;
+        binary_expr->data.binary_expr.right = right;
+
+        switch (op_type) {
+        case TOKEN_PLUS:
+            binary_expr->data.binary_expr.operation = '+';
+            break;
+        case TOKEN_MOINS:
+            binary_expr->data.binary_expr.operation = '-';
+            break;
+        // Ajoute d'autres opérations selon les types de tokens nécessaires
+        default:
+            fprintf(stderr, "Unexpected token in expression\n");
+            destroyAST(binary_expr);
             return NULL;
         }
 
-        if (root == NULL) {
-            root = node;
-        } else {
-            current->next = node;
-        }
-        current = node;
+        left = binary_expr;
+    }
 
-        token = getNextToken(source, &index);
-        if (token.type != TOKEN_SEMICOLON) {
-            printf("Syntax error: expected ';' at position %d\n", index);
+    return left;
+}
+
+// Fonction pour analyser un terme
+ASTNode *parse_term(Parser *parser) {
+    ASTNode *left = parse_factor(parser);
+
+    while (getCurrentToken(parser).type == TOKEN_FOIS ||
+           getCurrentToken(parser).type == TOKEN_DIVISION) {
+        TokenType op_type = getCurrentToken(parser).type;
+        advance(parser);
+        ASTNode *right = parse_factor(parser);
+
+        ASTNode *binary_expr = createASTNode(AST_BINARY_OPERATION);
+        binary_expr->data.binary_expr.left = left;
+        binary_expr->data.binary_expr.right = right;
+
+        switch (op_type) {
+        case TOKEN_FOIS:
+            binary_expr->data.binary_expr.operation = '*';
+            break;
+        case TOKEN_DIVISION:
+            binary_expr->data.binary_expr.operation = '/';
+            break;
+        // Ajoute d'autres opérations selon les types de tokens nécessaires
+        default:
+            fprintf(stderr, "Unexpected token in term\n");
+            destroyAST(binary_expr);
             return NULL;
         }
+
+        left = binary_expr;
     }
-    return root;
+
+    return left;
 }
 
-ASTNode *parseStatement(const char **source, int *index) {
-    Token token = getNextToken(*source, index);
+// Fonction pour analyser un facteur
+ASTNode *parse_factor(Parser *parser) {
+    Token current_token = getCurrentToken(parser);
+    advance(parser);
 
-    if (token.type == TOKEN_TYPE_NOMBRE || token.type == TOKEN_TYPE_REEL ||
-        token.type == TOKEN_TYPE_LETTRES || token.type == TOKEN_TYPE_LETTRE ||
-        token.type == TOKEN_TYPE_BOOLEAN) {
-        // Parse variable declaration
-        return parseVarDeclaration(source, index);
-    }
-
-    if (token.type == TOKEN_IDENT) {
-        // Parse assignment or function call
-        Token nextToken = getNextToken(*source, index);
-        if (nextToken.type == TOKEN_ASSIGNATION) {
-            return parseAssignment(source, index);
+    if (current_token.type == TOKEN_NOMBRE ||
+        current_token.type == TOKEN_REEL) {
+        double value = atof(current_token.value);
+        ASTNode *constant_node = createASTNode(AST_CONSTANT);
+        constant_node->data.constant = value;
+        return constant_node;
+    } else if (current_token.type == TOKEN_IDENT) {
+        ASTNode *identifier_node = createASTNode(AST_IDENTIFIER);
+        identifier_node->data.identifier = strdup(current_token.value);
+        return identifier_node;
+    } else if (current_token.type == TOKEN_PAR_OUVRANTE) {
+        ASTNode *expression_node = parse_expression(parser);
+        if (getCurrentToken(parser).type != TOKEN_PAR_FERMANTE) {
+            fprintf(stderr, "Expected closing parenthesis\n");
+            destroyAST(expression_node);
+            return NULL;
         }
-    }
-
-    printf("Syntax error: unexpected token %s at position %d\n", token.value,
-           *index);
-    return NULL;
-}
-
-ASTNode *parseVarDeclaration(const char **source, int *index) {
-    Token typeToken = getNextToken(*source, index);
-    Token nameToken = getNextToken(*source, index);
-
-    if (nameToken.type != TOKEN_IDENT) {
-        printf("Syntax error: expected identifier after type at position %d\n",
-               *index);
+        advance(parser);
+        return expression_node;
+    } else {
+        fprintf(stderr, "Unexpected token in factor\n");
         return NULL;
     }
-
-    ASTNode *node = createNode(NODE_VAR_DECL);
-    node->data.var_decl.var_type = typeToken.type;
-    node->data.var_decl.var_name = nameToken.value;
-
-    Token nextToken = getNextToken(*source, index);
-    if (nextToken.type == TOKEN_ASSIGNATION) {
-        node->data.var_decl.initial_value = parseExpression(source, index);
-    }
-
-    return node;
-}
-
-ASTNode *parseAssignment(const char **source, int *index) {
-    Token nameToken = getNextToken(*source, index);
-
-    ASTNode *node = createNode(NODE_ASSIGNMENT);
-    node->data.assignment.var_name = nameToken.value;
-
-    node->data.assignment.value = parseExpression(source, index);
-
-    return node;
-}
-
-ASTNode *parseExpression(const char **source, int *index) {
-    // This is a simplified version that only handles basic arithmetic
-    ASTNode *left = parsePrimary(source, index);
-
-    while (1) {
-        Token token = getNextToken(*source, index);
-        if (token.type != TOKEN_PLUS && token.type != TOKEN_MOINS &&
-            token.type != TOKEN_FOIS && token.type != TOKEN_DIVISION &&
-            token.type != TOKEN_PUISSANCE && token.type != TOKEN_MODULO) {
-            (*index)--;
-            return left;
-        }
-
-        ASTNode *node = createNode(NODE_EXPRESSION);
-        node->data.expression.left = left;
-        node->data.expression.operator= token.value;
-        node->data.expression.right = parsePrimary(source, index);
-
-        left = node;
-    }
-}
-
-ASTNode *parsePrimary(const char **source, int *index) {
-    Token token = getNextToken(*source, index);
-
-    if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL ||
-        token.type == TOKEN_STRING || token.type == TOKEN_LETTRE) {
-        ASTNode *node = createNode(NODE_EXPRESSION);
-        node->data.var_decl.initial_value = NULL;
-        node->data.var_decl.var_name = token.value;
-        return node;
-    }
-
-    if (token.type == TOKEN_IDENT) {
-        ASTNode *node = createNode(NODE_EXPRESSION);
-        node->data.var_decl.initial_value = NULL;
-        node->data.var_decl.var_name = token.value;
-        return node;
-    }
-
-    if (token.type == TOKEN_PAR_OUVRANTE) {
-        ASTNode *node = parseExpression(source, index);
-        token = getNextToken(*source, index);
-        if (token.type != TOKEN_PAR_FERMANTE) {
-            printf("Syntax error: expected ')' at position %d\n", *index);
-            return NULL;
-        }
-        return node;
-    }
-
-    printf("Syntax error: unexpected token %s at position %d\n", token.value,
-           *index);
-    return NULL;
 }

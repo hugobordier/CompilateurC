@@ -1,81 +1,89 @@
 #include "semantic.h"
+#include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-Symbol *symbolTable = NULL;
+#define SYMBOL_TABLE_SIZE 100
 
-void addSymbol(char *name, ASTNodeType type, TokenType data_type) { /*
-     Symbol *symbol = (Symbol *)malloc(sizeof(Symbol));
-     symbol->name = strdup(name);
-     symbol->type = type;
-     symbol->data_type = data_type;
-     symbol->next = symbolTable;
-     symbolTable = symbol;
- }
+Symbol symbolTable[SYMBOL_TABLE_SIZE];
+int symbolCount = 0;
 
- int symbolExists(char *name) {
-     Symbol *current = symbolTable;
-     while (current != NULL) {
-         if (strcmp(current->name, name) == 0) {
-             return 1; // Le symbole existe
-         }
-         current = current->next;
-     }
-     return 0; // le symbole existe pas
- }
+void addSymbol(char *name, ASTNodeType type, TokenType data_type) {
+    if (symbolCount < SYMBOL_TABLE_SIZE) {
+        Symbol *symbol = &symbolTable[symbolCount++];
+        symbol->name = strdup(name);
+        symbol->type = type;
+        symbol->data_type = data_type;
+    } else {
+        printf("Symbol table overflow\n");
+    }
+}
 
+Symbol *findSymbol(char *name) {
+    for (int i = 0; i < symbolCount; i++) {
+        if (strcmp(symbolTable[i].name, name) == 0) {
+            return &symbolTable[i];
+        }
+    }
+    return NULL;
+}
 
- NodeType getSymbolType(char *name) {
-     Symbol *current = symbolTable;
-     while (current != NULL) {
-         if (strcmp(current->name, name) == 0) {
-             return current->type;
-         }
-         current = current->next;
-     }
-     return NODE_UNKNOWN; // symbole pas trouvé
- }
+void printSymbolTable() {
+    printf("Symbol Table:\n");
+    for (int i = 0; i < symbolCount; i++) {
+        printf("Name: %s, Type: %d, Data Type: %d\n", symbolTable[i].name,
+               symbolTable[i].type, symbolTable[i].data_type);
+    }
+}
 
- void freeSymbolTable() {
-     Symbol *current = symbolTable;
-     while (current != NULL) {
-         Symbol *temp = current;
-         current = current->next;
-         free(temp->name);
-         free(temp);
-     }
-     symbolTable = NULL;
- }
+void analyzeAST(ASTNode *root) {
+    if (root == NULL) {
+        return;
+    }
 
- void analyzeSemantics(ASTNode *root) {
-     while (root != NULL) {
-         switch (root->type) {
-             case NODE_VAR_DECL:
-                 if (symbolExists(root->data.var_decl.var_name)) {
-                     printf("Erreur : Redéclaration de la variable %s\n",
- root->data.var_decl.var_name); exit(1);
-                 }
-                 addSymbol(root->data.var_decl.var_name, NODE_VAR_DECL,
- root->data.var_decl.var_type); break; case NODE_FUNC_DECL: if
- (symbolExists(root->data.func_decl.func_name)) { printf("Erreur : Redéclaration
- de la fonction %s\n", root->data.func_decl.func_name); exit(1);
-                 }
-                 addSymbol(root->data.func_decl.func_name, NODE_FUNC_DECL,
- TOKEN_UNKNOWN); // Type de fonction inconnu break; case NODE_FUNC_CALL: if
- (!symbolExists(root->data.func_call.func_name)) { printf("Erreur : Appel de
- fonction non déclarée : %s\n", root->data.func_call.func_name); exit(1);
-                 }
-                 break;
-             case NODE_ASSIGN:
-                 if (!symbolExists(root->data.assign.var_name)) {
-                     printf("Erreur : Assignation à une variable non déclarée :
- %s\n", root->data.assign.var_name); exit(1);
-                 }
-                 break;
-             default:
-                 break;
-         }
-         root = root->next;
-     }*/
+    switch (root->type) {
+    case AST_IDENTIFIER: {
+        Symbol *symbol = findSymbol(root->data.identifier);
+        if (symbol == NULL) {
+            printf("Semantic Error: Undefined variable '%s'\n",
+                   root->data.identifier);
+        }
+        break;
+    }
+    case AST_ASSIGNMENT: {
+        Symbol *symbol = findSymbol(root->data.assignment.name);
+        if (symbol == NULL) {
+            printf("Semantic Error: Undefined variable '%s'\n",
+                   root->data.assignment.name);
+        } else {
+            // Analyser le nœud de la valeur assignée
+            analyzeAST(root->data.assignment.value);
+            // Vérifier la compatibilité des types si nécessaire
+        }
+        break;
+    }
+    case AST_FUNCTION_CALL: {
+        Symbol *symbol = findSymbol(root->data.function_call.name);
+        if (symbol == NULL) {
+            printf("Semantic Error: Undefined function '%s'\n",
+                   root->data.function_call.name);
+        } else {
+            // Vérifier le nombre et le type des arguments
+            for (int i = 0; i < root->data.function_call.num_args; i++) {
+                analyzeAST(root->data.function_call.args[i]);
+                // Vérifier la compatibilité des types si nécessaire
+            }
+        }
+        break;
+    }
+    // Ajoute d'autres cas selon les types de nœuds nécessaires
+    default:
+        break;
+    }
+
+    // Analyser récursivement les enfants
+    for (int i = 0; i < root->childrenCount; i++) {
+        analyzeAST(root->children[i]);
+    }
 }
