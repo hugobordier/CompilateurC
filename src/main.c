@@ -29,7 +29,7 @@ char *readFile(const char *filename) {
 }
 
 int main() {
-    const char *source = "nombre a ;";
+    const char *source = "nombre a = 1; a = a+1*(1-5);";
     // const char *source = readFile("tests/test1.txt");
     printf("Lexing:\n");
     printLexer(source);

@@ -5,273 +5,167 @@
 #include <stdlib.h>
 #include <string.h>
 
-ASTNode *parseExpression(const char *source, int *index);
-ASTNode **parseArguments(const char *source, int *index, int *arg_count);
-ASTNode *parseStatement(const char *source, int *index);
-ASTNode *parseBlock(const char *source, int *index);
+ASTNode *parseStatement(const char **source, int *index);
+ASTNode *parseExpression(const char **source, int *index);
+ASTNode *parsePrimary(const char **source, int *index);
+ASTNode *parseAssignment(const char **source, int *index);
+ASTNode *parseVarDeclaration(const char **source, int *index);
 
-ASTNode *parsePrimary(const char *source, int *index);
-ASTNode *parseUnary(const char *source, int *index);
-ASTNode *parseMultiplicative(const char *source, int *index);
-ASTNode *parseAdditive(const char *source, int *index);
-ASTNode *parseExpression(const char *source, int *index);
-
-ASTNode *parseExpression(const char *source, int *index) {
-    return parseAdditive(source, index);
-}
-
-ASTNode *parsePrimary(const char *source, int *index) {
-    Token token = getNextToken(source, index);
-
-    if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL) {
-        ASTNode *node = createNode(NODE_EXPRESSION);
-        node->data.expression.left = NULL;
-        node->data.expression.right = NULL;
-        node->data.expression.operator= TOKEN_EOF; // No operator for primary
-        // Ajouter la gestion des valeurs numériques
-        // node->data.expression.value = atof(token.value);  // Par exemple
-        return node;
-    } else if (token.type == TOKEN_IDENT) {
-        ASTNode *node = createNode(NODE_EXPRESSION);
-        node->data.expression.left = NULL;
-        node->data.expression.right = NULL;
-        node->data.expression.operator= TOKEN_EOF; // No operator for primary
-        // Ajouter la gestion des identifiants
-        // node->data.expression.var_name = strdup(token.value);  // Par exemple
-        return node;
-    } else if (token.type == TOKEN_PAR_OUVRANTE) {
-        ASTNode *node = parseExpression(source, index);
-        token = getNextToken(source, index);
-        if (token.type != TOKEN_PAR_FERMANTE) {
-            fprintf(stderr, "Error: Expected closing parenthesis\n");
-            exit(1);
-        }
-        return node;
-    }
-
-    fprintf(stderr, "Error: Unexpected token in primary expression\n");
-    exit(1);
-    return NULL;
-}
-
-ASTNode *parseUnary(const char *source, int *index) {
-    Token token = getNextToken(source, index);
-
-    if (token.type == TOKEN_PLUS || token.type == TOKEN_MOINS) {
-        ASTNode *node = createNode(NODE_EXPRESSION);
-        node->data.expression.left = NULL;
-        node->data.expression.right = parseUnary(source, index);
-        node->data.expression.operator= token.value;
-        return node;
-    }
-
-    (*index)--;
-    return parsePrimary(source, index);
-}
-
-ASTNode *parseMultiplicative(const char *source, int *index) {
-    ASTNode *node = parseUnary(source, index);
-
-    while (1) {
-        Token token = getNextToken(source, index);
-
-        if (token.type == TOKEN_FOIS || token.type == TOKEN_DIVISION) {
-            ASTNode *newNode = createNode(NODE_EXPRESSION);
-            newNode->data.expression.left = node;
-            newNode->data.expression.right = parseUnary(source, index);
-            newNode->data.expression.operator= token.value;
-            node = newNode;
-        } else {
-            (*index)--;
-            return node;
-        }
-    }
-}
-
-ASTNode *parseAdditive(const char *source, int *index) {
-    ASTNode *node = parseMultiplicative(source, index);
-
-    while (1) {
-        Token token = getNextToken(source, index);
-
-        if (token.type == TOKEN_PLUS || token.type == TOKEN_MOINS) {
-            ASTNode *newNode = createNode(NODE_EXPRESSION);
-            newNode->data.expression.left = node;
-            newNode->data.expression.right = parseMultiplicative(source, index);
-            newNode->data.expression.operator= token.value;
-            node = newNode;
-        } else {
-            (*index)--;
-            return node;
-        }
-    }
-}
-
+// Function to create a new AST node
 ASTNode *createNode(ASTNodeType type) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = type;
     node->next = NULL;
+    memset(&node->data, 0, sizeof(node->data));
     return node;
 }
 
+// Function to parse the source code and create the AST
 ASTNode *parse(const char *source) {
     int index = 0;
     ASTNode *root = NULL;
     ASTNode *current = NULL;
 
-    while (source[index] != '\0') {
-        ASTNode *stmt = parseStatement(source, &index);
-        if (stmt) {
-            if (root == NULL) {
-                root = stmt;
-            } else {
-                current->next = stmt;
-            }
-            current = stmt;
-        } else {
+    while (1) {
+        Token token = getNextToken(source, &index);
+        if (token.type == TOKEN_EOF) {
             break;
         }
-    }
+        if (token.type == TOKEN_UNKNOWN) {
+            printf("Unknown token: %s\n", token.value);
+            free(token.value);
+            continue;
+        }
 
+        ASTNode *node = parseStatement(&source, &index);
+        if (node == NULL) {
+            printf("Syntax error at position %d\n", index);
+            return NULL;
+        }
+
+        if (root == NULL) {
+            root = node;
+        } else {
+            current->next = node;
+        }
+        current = node;
+
+        token = getNextToken(source, &index);
+        if (token.type != TOKEN_SEMICOLON) {
+            printf("Syntax error: expected ';' at position %d\n", index);
+            return NULL;
+        }
+    }
     return root;
 }
 
-ASTNode *parseStatement(const char *source, int *index) {
-    Token token = getNextToken(source, index);
+ASTNode *parseStatement(const char **source, int *index) {
+    Token token = getNextToken(*source, index);
 
     if (token.type == TOKEN_TYPE_NOMBRE || token.type == TOKEN_TYPE_REEL ||
         token.type == TOKEN_TYPE_LETTRES || token.type == TOKEN_TYPE_LETTRE ||
         token.type == TOKEN_TYPE_BOOLEAN) {
-
-        Token next_token = getNextToken(source, index);
-
-        if (next_token.type == TOKEN_IDENT) {
-            ASTNode *node = createNode(NODE_VAR_DECL);
-            node->data.var_decl.var_type = token.type;
-            node->data.var_decl.var_name = strdup(next_token.value);
-
-            Token next_next_token = getNextToken(source, index);
-            if (next_next_token.type == TOKEN_ASSIGNATION) {
-                node->data.var_decl.initial_value =
-                    parseExpression(source, index);
-            } else {
-                node->data.var_decl.initial_value = NULL; // no assignation
-                (*index)--;
-            }
-
-            return node;
-        } else {
-            fprintf(stderr,
-                    "Error: Expected identifier after type declaration\n");
-            exit(1);
-        }
+        // Parse variable declaration
+        return parseVarDeclaration(source, index);
     }
 
     if (token.type == TOKEN_IDENT) {
-        Token next_token = getNextToken(source, index);
-        if (next_token.type == TOKEN_ASSIGNATION) {
-            ASTNode *node = createNode(NODE_ASSIGNMENT);
-            node->data.assignment.var_name = token.value;
-            node->data.assignment.value = parseExpression(source, index);
-            return node;
-        } else if (next_token.type == TOKEN_PAR_OUVRANTE) {
-            // Function call
-            ASTNode *node = createNode(NODE_FUNCTION_CALL);
-            node->data.function_call.function_name = token.value;
-            node->data.function_call.arguments = parseArguments(
-                source, index, &node->data.function_call.arg_count);
-            return node;
-        } else {
-            fprintf(stderr, "Error: Expected '=' or '(' after identifier\n");
-            exit(1);
+        // Parse assignment or function call
+        Token nextToken = getNextToken(*source, index);
+        if (nextToken.type == TOKEN_ASSIGNATION) {
+            return parseAssignment(source, index);
         }
     }
 
-    // Parsing des instructions conditionnelles
-    if (token.type == TOKEN_IF) {
-        ASTNode *node = createNode(NODE_IF_STATEMENT);
-        node->data.if_statement.condition = parseExpression(source, index);
-        node->data.if_statement.then_branch = parseBlock(source, index);
-
-        Token next_token = getNextToken(source, index);
-        if (next_token.type == TOKEN_ELSE) {
-            node->data.if_statement.else_branch = parseBlock(source, index);
-        } else {
-            (*index)--;
-        }
-
-        return node;
-    }
-
-    // Ajoutez d'autres cas de parsing d'instructions ici (while, for, etc.)
-
+    printf("Syntax error: unexpected token %s at position %d\n", token.value,
+           *index);
     return NULL;
 }
 
-ASTNode **parseArguments(const char *source, int *index, int *arg_count) {
-    Token token = getNextToken(source, index);
-    ASTNode **arg_list = NULL;
-    *arg_count = 0;
+ASTNode *parseVarDeclaration(const char **source, int *index) {
+    Token typeToken = getNextToken(*source, index);
+    Token nameToken = getNextToken(*source, index);
 
-    if (token.type != TOKEN_PAR_OUVRANTE) {
-        fprintf(stderr, "Error: Expected '('\n");
-        exit(1);
+    if (nameToken.type != TOKEN_IDENT) {
+        printf("Syntax error: expected identifier after type at position %d\n",
+               *index);
+        return NULL;
     }
 
-    token = getNextToken(source, index);
-    while (token.type != TOKEN_PAR_FERMANTE && token.type != TOKEN_EOF) {
-        if (token.type == TOKEN_IDENT) {
-            Token next_token = getNextToken(source, index);
-            if (next_token.type == TOKEN_IDENT) {
-                ASTNode *arg = createNode(NODE_VAR_DECL);
-                arg->data.var_decl.var_name = token.value;
-                arg->data.var_decl.var_type = next_token.type;
+    ASTNode *node = createNode(NODE_VAR_DECL);
+    node->data.var_decl.var_type = typeToken.type;
+    node->data.var_decl.var_name = nameToken.value;
 
-                arg_list =
-                    realloc(arg_list, sizeof(ASTNode *) * (*arg_count + 1));
-                arg_list[*arg_count] = arg;
-                (*arg_count)++;
-            }
-        }
-        token = getNextToken(source, index);
-        if (token.type == TOKEN_COMMA) {
-            token = getNextToken(source, index);
-        }
+    Token nextToken = getNextToken(*source, index);
+    if (nextToken.type == TOKEN_ASSIGNATION) {
+        node->data.var_decl.initial_value = parseExpression(source, index);
     }
 
-    return arg_list;
+    return node;
 }
 
-ASTNode *parseBlock(const char *source, int *index) {
-    Token token = getNextToken(source, index);
-    if (token.type != TOKEN_ACCO_OUVRANTE) {
-        fprintf(stderr, "Error: Expected '{' at the beginning of a block\n");
-        exit(1);
-    }
+ASTNode *parseAssignment(const char **source, int *index) {
+    Token nameToken = getNextToken(*source, index);
 
-    ASTNode *block = NULL;
-    ASTNode *current = NULL;
+    ASTNode *node = createNode(NODE_ASSIGNMENT);
+    node->data.assignment.var_name = nameToken.value;
+
+    node->data.assignment.value = parseExpression(source, index);
+
+    return node;
+}
+
+ASTNode *parseExpression(const char **source, int *index) {
+    // This is a simplified version that only handles basic arithmetic
+    ASTNode *left = parsePrimary(source, index);
 
     while (1) {
-        token = getNextToken(source, index);
-        if (token.type == TOKEN_ACCO_FERMANTE) {
-            break;
+        Token token = getNextToken(*source, index);
+        if (token.type != TOKEN_PLUS && token.type != TOKEN_MOINS &&
+            token.type != TOKEN_FOIS && token.type != TOKEN_DIVISION &&
+            token.type != TOKEN_PUISSANCE && token.type != TOKEN_MODULO) {
+            (*index)--;
+            return left;
         }
-        (*index)--;
 
-        ASTNode *stmt = parseStatement(source, index);
-        if (stmt) {
-            if (block == NULL) {
-                block = stmt;
-            } else {
-                current->next = stmt;
-            }
-            current = stmt;
-        } else {
-            fprintf(stderr, "Error: Invalid statement in block\n");
-            exit(1);
-        }
+        ASTNode *node = createNode(NODE_EXPRESSION);
+        node->data.expression.left = left;
+        node->data.expression.operator= token.value;
+        node->data.expression.right = parsePrimary(source, index);
+
+        left = node;
+    }
+}
+
+ASTNode *parsePrimary(const char **source, int *index) {
+    Token token = getNextToken(*source, index);
+
+    if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL ||
+        token.type == TOKEN_STRING || token.type == TOKEN_LETTRE) {
+        ASTNode *node = createNode(NODE_EXPRESSION);
+        node->data.var_decl.initial_value = NULL;
+        node->data.var_decl.var_name = token.value;
+        return node;
     }
 
-    return block;
+    if (token.type == TOKEN_IDENT) {
+        ASTNode *node = createNode(NODE_EXPRESSION);
+        node->data.var_decl.initial_value = NULL;
+        node->data.var_decl.var_name = token.value;
+        return node;
+    }
+
+    if (token.type == TOKEN_PAR_OUVRANTE) {
+        ASTNode *node = parseExpression(source, index);
+        token = getNextToken(*source, index);
+        if (token.type != TOKEN_PAR_FERMANTE) {
+            printf("Syntax error: expected ')' at position %d\n", *index);
+            return NULL;
+        }
+        return node;
+    }
+
+    printf("Syntax error: unexpected token %s at position %d\n", token.value,
+           *index);
+    return NULL;
 }
