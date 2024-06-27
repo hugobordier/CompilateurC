@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 void generateCode(ASTNode *root) {
-    while (root) {
+    /*while (root) {
         switch (root->type) {
             case NODE_VAR_DECL:
                 break;
@@ -14,5 +14,5 @@ void generateCode(ASTNode *root) {
                 break;
         }
         root = root->next;
-    }
+    }*/
 }

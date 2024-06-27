@@ -1,15 +1,16 @@
 #include "parser.h"
+#include "lexer.h"
+#include "ast.h" 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// Forward declarations
 ASTNode *parseExpression(const char *source, int *index);
-ASTNode *parseArguments(const char *source, int *index);
+ASTNode **parseArguments(const char *source, int *index, int *arg_count);
 ASTNode *parseStatement(const char *source, int *index);
 ASTNode *parseBlock(const char *source, int *index);
 
-ASTNode *createNode(NodeType type) {
+ASTNode *createNode(ASTNodeType type) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = type;
     node->next = NULL;
@@ -18,17 +19,21 @@ ASTNode *createNode(NodeType type) {
 
 ASTNode *parse(const char *source) {
     int index = 0;
-    Token token = getNextToken(source, &index);
-    ASTNode *root = createNode(NODE_BLOCK); // Root node is a block containing all statements
-    ASTNode *current = root;
+    ASTNode *root = NULL;
+    ASTNode *current = NULL;
 
-    while (token.type != TOKEN_EOF) {
+    while (source[index] != '\0') {
         ASTNode *stmt = parseStatement(source, &index);
         if (stmt) {
-            current->next = stmt;
+            if (root == NULL) {
+                root = stmt;
+            } else {
+                current->next = stmt;
+            }
             current = stmt;
+        } else {
+            break;
         }
-        token = getNextToken(source, &index);
     }
 
     return root;
@@ -37,76 +42,80 @@ ASTNode *parse(const char *source) {
 ASTNode *parseStatement(const char *source, int *index) {
     Token token = getNextToken(source, index);
 
-    if (token.type == TOKEN_IDENT) {
+    if (token.type == TOKEN_TYPE_NOMBRE || token.type == TOKEN_TYPE_REEL ||
+        token.type == TOKEN_TYPE_LETTRES || token.type == TOKEN_TYPE_LETTRE ||
+        token.type == TOKEN_TYPE_BOOLEAN) {
+
         Token next_token = getNextToken(source, index);
 
         if (next_token.type == TOKEN_IDENT) {
-            // Variable or array declaration
-            Token next_next_token = getNextToken(source, index);
-            if (next_next_token.type == TOKEN_CROCHET_OUVRANT) {
-                // Array declaration
-                ASTNode *node = createNode(NODE_ARRAY_DECL);
-                node->data.array_decl.array_name = token.value;
-                node->data.array_decl.elem_type = next_token.type;  // Assuming next_token.value is a string representing the type
+            ASTNode *node = createNode(NODE_VAR_DECL);
+            node->data.var_decl.var_type = token.type;
+            node->data.var_decl.var_name = next_token.value;
 
-                // Check for array size
-                next_token = getNextToken(source, index);
-                if (next_token.type == TOKEN_NOMBRE) {
-                    node->data.array_decl.size = parseExpression(source, index);
-                    next_token = getNextToken(source, index); // Expecting closing bracket
-                }
-
-                if (next_token.type == TOKEN_CROCHET_FERMANT) {
-                    // Successfully parsed array declaration
-                    return node;
-                }
-            } else {
-                // Variable declaration
-                ASTNode *node = createNode(NODE_VAR_DECL);
-                node->data.var_decl.var_name = token.value;
-                node->data.var_decl.var_type = next_token.type;
-                return node;
+            Token next = getNextToken(source, index);
+            if (next.type == TOKEN_ASSIGNATION) {
+                node->data.var_decl.initial_value = parseExpression(source, index);
             }
-        } else if (next_token.type == TOKEN_ASSIGNATION) {
-            // Variable assignment
-            ASTNode *node = createNode(NODE_ASSIGN);
-            node->data.assign.var_name = token.value;
-            node->data.assign.value = parseExpression(source, index);
+
             return node;
-        } else if (next_token.type == TOKEN_CROCHET_OUVRANT) {
-            // Array element access
-            ASTNode *node = createNode(NODE_ARRAY_ACCESS);
-            node->data.array_access.array_name = token.value;
-            node->data.array_access.index = parseExpression(source, index); // Parse the index expression
-
-            next_token = getNextToken(source, index); // Expecting closing bracket
-            if (next_token.type == TOKEN_CROCHET_FERMANT) {
-                // Successfully parsed array access
-                return node;
-            }
+        } else {
+            fprintf(stderr, "Error: Expected identifier after type declaration\n");
+            exit(1);
         }
-    } else if (token.type == TOKEN_FONCTION) {
-        // Function declaration
-        ASTNode *node = createNode(NODE_FUNC_DECL);
-        node->data.func_decl.func_name = getNextToken(source, index).value;
+    }
 
-        // Parse function arguments
-        node->data.func_decl.params = parseArguments(source, index);
+    if (token.type == TOKEN_IDENT) {
+        Token next_token = getNextToken(source, index);
+        if (next_token.type == TOKEN_ASSIGNATION) {
+            ASTNode *node = createNode(NODE_ASSIGNMENT);
+            node->data.assignment.var_name = token.value;
+            node->data.assignment.value = parseExpression(source, index);
+            return node;
+        } else if (next_token.type == TOKEN_PAR_OUVRANTE) {
+            // Function call
+            ASTNode *node = createNode(NODE_FUNCTION_CALL);
+            node->data.function_call.function_name = token.value;
+            node->data.function_call.arguments = parseArguments(source, index, &node->data.function_call.arg_count);
+            return node;
+        } else {
+            fprintf(stderr, "Error: Expected '=' or '(' after identifier\n");
+            exit(1);
+        }
+    }
 
-        // Parse function body
-        node->data.func_decl.body = parseBlock(source, index);
-
+    // Parsing des instructions conditionnelles
+    if (token.type == TOKEN_IF) {
+        ASTNode *node = createNode(NODE_IF_STATEMENT);
+        node->data.if_statement.condition = parseExpression(source, index);
+        node->data.if_statement.then_branch = parseBlock(source, index);
+        
+        Token next_token = getNextToken(source, index);
+        if (next_token.type == TOKEN_ELSE) {
+            node->data.if_statement.else_branch = parseBlock(source, index);
+        } else {
+            (*index)--;
+        }
+        
         return node;
     }
 
-    return NULL; // Unsupported statement
+    // Ajoutez d'autres cas de parsing d'instructions ici (while, for, etc.)
+
+    return NULL;
 }
 
-ASTNode *parseArguments(const char *source, int *index) {
+ASTNode **parseArguments(const char *source, int *index, int *arg_count) {
     Token token = getNextToken(source, index);
-    ASTNode *arg_list = NULL;
-    ASTNode **current = &arg_list;
+    ASTNode **arg_list = NULL;
+    *arg_count = 0;
 
+    if (token.type != TOKEN_PAR_OUVRANTE) {
+        fprintf(stderr, "Error: Expected '('\n");
+        exit(1);
+    }
+
+    token = getNextToken(source, index);
     while (token.type != TOKEN_PAR_FERMANTE && token.type != TOKEN_EOF) {
         if (token.type == TOKEN_IDENT) {
             Token next_token = getNextToken(source, index);
@@ -114,61 +123,70 @@ ASTNode *parseArguments(const char *source, int *index) {
                 ASTNode *arg = createNode(NODE_VAR_DECL);
                 arg->data.var_decl.var_name = token.value;
                 arg->data.var_decl.var_type = next_token.type;
-                *current = arg;
-                current = &arg->next;
+                
+                arg_list = realloc(arg_list, sizeof(ASTNode *) * (*arg_count + 1));
+                arg_list[*arg_count] = arg;
+                (*arg_count)++;
             }
         }
         token = getNextToken(source, index);
+        if (token.type == TOKEN_COMMA) {
+            token = getNextToken(source, index);
+        }
     }
 
     return arg_list;
 }
 
-ASTNode *parseBlock(const char *source, int *index) {
-    ASTNode *block = createNode(NODE_BLOCK);
-    ASTNode *current = block;
+ASTNode *parseExpression(const char *source, int *index) {
+    // Ici vous devez implémenter la logique de parsing des expressions
+    // Cela peut inclure des nombres, des opérateurs, des appels de fonction, etc.
+    // Pour simplifier, supposons que nous avons seulement des nombres pour l'instant
 
     Token token = getNextToken(source, index);
-    while (token.type != TOKEN_ACCO_FERMANTE && token.type != TOKEN_EOF) {
+    if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL) {
+        ASTNode *node = createNode(NODE_EXPRESSION);
+        // Créer un nœud pour la valeur
+        ASTNode *value_node = createNode(NODE_EXPRESSION);
+        value_node->data.var_decl.var_name = token.value; // Utiliser un champ approprié pour stocker la valeur
+        node->data.var_decl.initial_value = value_node; // Assignation correcte
+        return node;
+    }
+
+    fprintf(stderr, "Error: Expected a number or expression\n");
+    exit(1);
+}
+
+ASTNode *parseBlock(const char *source, int *index) {
+    Token token = getNextToken(source, index);
+    if (token.type != TOKEN_ACCO_OUVRANTE) {
+        fprintf(stderr, "Error: Expected '{' at the beginning of a block\n");
+        exit(1);
+    }
+
+    ASTNode *block = NULL;
+    ASTNode *current = NULL;
+
+    while (1) {
+        token = getNextToken(source, index);
+        if (token.type == TOKEN_ACCO_FERMANTE) {
+            break;
+        }
+        (*index)--;
+
         ASTNode *stmt = parseStatement(source, index);
         if (stmt) {
-            current->next = stmt;
+            if (block == NULL) {
+                block = stmt;
+            } else {
+                current->next = stmt;
+            }
             current = stmt;
+        } else {
+            fprintf(stderr, "Error: Invalid statement in block\n");
+            exit(1);
         }
-        token = getNextToken(source, index);
     }
 
     return block;
-}
-
-ASTNode *parseExpression(const char *source, int *index) {
-    Token token = getNextToken(source, index);
-    ASTNode *node = NULL;
-
-    if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL || token.type == TOKEN_STRING || token.type == TOKEN_LETTRE) {
-        // Literal
-        node = createNode(NODE_LITERAL);
-        node->data.literal.value = token;
-    } else if (token.type == TOKEN_IDENT) {
-        // Variable or function call
-        Token next_token = getNextToken(source, index);
-        if (next_token.type == TOKEN_PAR_OUVRANTE) {
-            // Function call
-            node = createNode(NODE_FUNC_CALL);
-            node->data.func_call.func_name = token.value;
-            node->data.func_call.args = parseArguments(source, index);
-        } else if (next_token.type == TOKEN_CROCHET_OUVRANT) {
-            // Array access
-            node = createNode(NODE_ARRAY_ACCESS);
-            node->data.array_access.array_name = token.value;
-            node->data.array_access.index = parseExpression(source, index); // Parse the index expression
-            getNextToken(source, index); // Expecting closing bracket
-        } else {
-            // Variable reference
-            node = createNode(NODE_VAR_DECL);
-            node->data.var_decl.var_name = token.value;
-        }
-    }
-
-    return node;
 }

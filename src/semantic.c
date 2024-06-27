@@ -5,7 +5,7 @@
 
 Symbol *symbolTable = NULL;
 
-void addSymbol(char *name, NodeType type, TokenType data_type) {
+void addSymbol(char *name, ASTNodeType type, TokenType data_type) {/*
     Symbol *symbol = (Symbol *)malloc(sizeof(Symbol));
     symbol->name = strdup(name);
     symbol->type = type;
@@ -81,5 +81,5 @@ void analyzeSemantics(ASTNode *root) {
                 break;
         }
         root = root->next;
-    }
+    }*/
 }

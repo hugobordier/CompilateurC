@@ -2,88 +2,66 @@
 #define AST_H
 
 #include "lexer.h"
+
 typedef enum {
-    NODE_UNKNOWN,       
     NODE_VAR_DECL,
-    NODE_FUNC_DECL,
-    NODE_FUNC_CALL,
-    NODE_ASSIGN,
-    NODE_BINARY_OP,
-    NODE_LITERAL,
-    NODE_RETURN,
-    NODE_COMMENT,
-    NODE_ARRAY_DECL,
-    NODE_ARRAY_ACCESS,
-    NODE_BLOCK,
-} NodeType;
+    NODE_ASSIGNMENT,
+    NODE_FUNCTION_CALL,
+    NODE_EXPRESSION,
+    NODE_IF_STATEMENT,
+    NODE_WHILE_STATEMENT,
+    NODE_FOR_STATEMENT,
+    NODE_FUNCTION_DECL,
+    NODE_RETURN_STATEMENT,
+} ASTNodeType;
+
 typedef struct ASTNode {
-    NodeType type; // Type du nœud
+    ASTNodeType type;
     union {
-        // Déclaration de variable
         struct {
-            char *var_name;
             TokenType var_type;
+            char *var_name;
+            struct ASTNode *initial_value;
         } var_decl;
-
-        // Déclaration de tableau
-        struct {
-            char *array_name;
-            TokenType elem_type;
-            struct ASTNode *size; // Expression de taille (facultative)
-        } array_decl;
-
-        // Accès au tableau
-        struct {
-            char *array_name;
-            struct ASTNode *index; // Expression d'index
-        } array_access;
-
-        // Déclaration de fonction
-        struct {
-            char *func_name;
-            struct ASTNode *params; // Liste des paramètres
-            struct ASTNode *body; // Corps de la fonction
-        } func_decl;
-
-        // Appel de fonction
-        struct {
-            char *func_name;
-            struct ASTNode *args; // Liste des arguments
-        } func_call;
-
-        // Affectation
         struct {
             char *var_name;
-            struct ASTNode *value; // Valeur à affecter
-        } assign;
-
-        // Opération binaire
+            struct ASTNode *value;
+        } assignment;
         struct {
-            struct ASTNode *left; // Opérande gauche
-            struct ASTNode *right; // Opérande droite
-            TokenType op; // Type de l'opération
-        } binary_op;
-
-        // Littéral
+            char *function_name;
+            struct ASTNode **arguments;
+            int arg_count;
+        } function_call;
         struct {
-            Token value; // Valeur littérale
-        } literal;
-
-        // Commentaire
+            struct ASTNode *condition;
+            struct ASTNode *then_branch;
+            struct ASTNode *else_branch;
+        } if_statement;
         struct {
-            char *text; // Texte du commentaire
-        } comment;
-
-        // Retour
+            struct ASTNode *condition;
+            struct ASTNode *body;
+        } while_statement;
         struct {
-            struct ASTNode* expr; // Expression de retour
-        } return_stmt;
+            struct ASTNode *initializer;
+            struct ASTNode *condition;
+            struct ASTNode *increment;
+            struct ASTNode *body;
+        } for_statement;
+        struct {
+            char *function_name;
+            struct ASTNode **parameters;
+            int param_count;
+            struct ASTNode *body;
+        } function_decl;
+        struct {
+            struct ASTNode *return_value;
+        } return_statement;
+        // Ajoutez d'autres structures de nœuds si nécessaire
     } data;
-
-    struct ASTNode *next; // Pointeur vers le nœud suivant pour les listes de nœuds
+    struct ASTNode *next;
 } ASTNode;
 
-// Fonction pour imprimer l'AST
-void printAST(ASTNode *root);
+ASTNode *createNode(ASTNodeType type);
+void printASTNode(ASTNode *node);
 
 #endif

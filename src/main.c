@@ -34,10 +34,10 @@ int main() {
     printf("Lexing:\n");
     printLexer(source);
 
-    //ASTNode *ast = parse(source);
+    ASTNode *ast = parse(source);
 
-    //printf("AST:\n");
-    //printAST(ast);
+    printf("AST:\n");
+    printASTNode(ast);
 
     printf("\nSemantic Analysis:\n");
     //analyzeSemantics(ast);
