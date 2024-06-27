@@ -10,6 +10,103 @@ ASTNode **parseArguments(const char *source, int *index, int *arg_count);
 ASTNode *parseStatement(const char *source, int *index);
 ASTNode *parseBlock(const char *source, int *index);
 
+ASTNode *parsePrimary(const char *source, int *index);
+ASTNode *parseUnary(const char *source, int *index);
+ASTNode *parseMultiplicative(const char *source, int *index);
+ASTNode *parseAdditive(const char *source, int *index);
+ASTNode *parseExpression(const char *source, int *index);
+
+ASTNode *parseExpression(const char *source, int *index) {
+    return parseAdditive(source, index);
+}
+
+ASTNode *parsePrimary(const char *source, int *index) {
+    Token token = getNextToken(source, index);
+
+    if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL) {
+        ASTNode *node = createNode(NODE_EXPRESSION);
+        node->data.expression.left = NULL;
+        node->data.expression.right = NULL;
+        node->data.expression.operator= TOKEN_EOF; // No operator for primary
+        // Ajouter la gestion des valeurs numériques
+        // node->data.expression.value = atof(token.value);  // Par exemple
+        return node;
+    } else if (token.type == TOKEN_IDENT) {
+        ASTNode *node = createNode(NODE_EXPRESSION);
+        node->data.expression.left = NULL;
+        node->data.expression.right = NULL;
+        node->data.expression.operator= TOKEN_EOF; // No operator for primary
+        // Ajouter la gestion des identifiants
+        // node->data.expression.var_name = strdup(token.value);  // Par exemple
+        return node;
+    } else if (token.type == TOKEN_PAR_OUVRANTE) {
+        ASTNode *node = parseExpression(source, index);
+        token = getNextToken(source, index);
+        if (token.type != TOKEN_PAR_FERMANTE) {
+            fprintf(stderr, "Error: Expected closing parenthesis\n");
+            exit(1);
+        }
+        return node;
+    }
+
+    fprintf(stderr, "Error: Unexpected token in primary expression\n");
+    exit(1);
+    return NULL;
+}
+
+ASTNode *parseUnary(const char *source, int *index) {
+    Token token = getNextToken(source, index);
+
+    if (token.type == TOKEN_PLUS || token.type == TOKEN_MOINS) {
+        ASTNode *node = createNode(NODE_EXPRESSION);
+        node->data.expression.left = NULL;
+        node->data.expression.right = parseUnary(source, index);
+        node->data.expression.operator= token.value;
+        return node;
+    }
+
+    (*index)--;
+    return parsePrimary(source, index);
+}
+
+ASTNode *parseMultiplicative(const char *source, int *index) {
+    ASTNode *node = parseUnary(source, index);
+
+    while (1) {
+        Token token = getNextToken(source, index);
+
+        if (token.type == TOKEN_FOIS || token.type == TOKEN_DIVISION) {
+            ASTNode *newNode = createNode(NODE_EXPRESSION);
+            newNode->data.expression.left = node;
+            newNode->data.expression.right = parseUnary(source, index);
+            newNode->data.expression.operator= token.value;
+            node = newNode;
+        } else {
+            (*index)--;
+            return node;
+        }
+    }
+}
+
+ASTNode *parseAdditive(const char *source, int *index) {
+    ASTNode *node = parseMultiplicative(source, index);
+
+    while (1) {
+        Token token = getNextToken(source, index);
+
+        if (token.type == TOKEN_PLUS || token.type == TOKEN_MOINS) {
+            ASTNode *newNode = createNode(NODE_EXPRESSION);
+            newNode->data.expression.left = node;
+            newNode->data.expression.right = parseMultiplicative(source, index);
+            newNode->data.expression.operator= token.value;
+            node = newNode;
+        } else {
+            (*index)--;
+            return node;
+        }
+    }
+}
+
 ASTNode *createNode(ASTNodeType type) {
     ASTNode *node = (ASTNode *)malloc(sizeof(ASTNode));
     node->type = type;
@@ -51,12 +148,15 @@ ASTNode *parseStatement(const char *source, int *index) {
         if (next_token.type == TOKEN_IDENT) {
             ASTNode *node = createNode(NODE_VAR_DECL);
             node->data.var_decl.var_type = token.type;
-            node->data.var_decl.var_name = next_token.value;
+            node->data.var_decl.var_name = strdup(next_token.value);
 
-            Token next = getNextToken(source, index);
-            if (next.type == TOKEN_ASSIGNATION) {
+            Token next_next_token = getNextToken(source, index);
+            if (next_next_token.type == TOKEN_ASSIGNATION) {
                 node->data.var_decl.initial_value =
                     parseExpression(source, index);
+            } else {
+                node->data.var_decl.initial_value = NULL; // no assignation
+                (*index)--;
             }
 
             return node;
@@ -140,27 +240,6 @@ ASTNode **parseArguments(const char *source, int *index, int *arg_count) {
     }
 
     return arg_list;
-}
-
-ASTNode *parseExpression(const char *source, int *index) {
-    // Ici vous devez implémenter la logique de parsing des expressions
-    // Cela peut inclure des nombres, des opérateurs, des appels de fonction,
-    // etc. Pour simplifier, supposons que nous avons seulement des nombres pour
-    // l'instant
-
-    Token token = getNextToken(source, index);
-    if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL) {
-        ASTNode *node = createNode(NODE_EXPRESSION);
-        // Créer un nœud pour la valeur
-        ASTNode *value_node = createNode(NODE_EXPRESSION);
-        value_node->data.var_decl.var_name =
-            token.value; // Utiliser un champ approprié pour stocker la valeur
-        node->data.var_decl.initial_value = value_node; // Assignation correcte
-        return node;
-    }
-
-    fprintf(stderr, "Error: Expected a number or expression\n");
-    exit(1);
 }
 
 ASTNode *parseBlock(const char *source, int *index) {

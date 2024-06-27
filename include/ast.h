@@ -33,6 +33,11 @@ typedef struct ASTNode {
             int arg_count;
         } function_call;
         struct {
+            struct ASTNode *left;
+            struct ASTNode *right;
+            char *operator;
+        } expression;
+        struct {
             struct ASTNode *condition;
             struct ASTNode *then_branch;
             struct ASTNode *else_branch;
@@ -57,7 +62,8 @@ typedef struct ASTNode {
             struct ASTNode *return_value;
         } return_statement;
     } data;//union called "data"
-    struct ASTNode *next;//and a pointer pointing to the next ASTNode
+    struct ASTNode *next;//add a pointer pointing to the next ASTNode
+    //struct ASTNode *parent;
 } ASTNode;
 
 ASTNode *createNode(ASTNodeType type);
