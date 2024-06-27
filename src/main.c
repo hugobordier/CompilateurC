@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "ast.h"
+#include "codegen.h"
 #include "lexer.h"
 #include "parser.h"
-#include "ast.h"
 #include "semantic.h"
-#include "codegen.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 char *readFile(const char *filename) {
     FILE *file = fopen(filename, "r");
@@ -30,7 +30,7 @@ char *readFile(const char *filename) {
 
 int main() {
     const char *source = "nombre a = 10; a = a /1;";
-    //const char *source = readFile("tests/test1.txt");
+    // const char *source = readFile("tests/test1.txt");
     printf("Lexing:\n");
     printLexer(source);
 
@@ -40,10 +40,10 @@ int main() {
     printASTNode(ast);
 
     printf("\nSemantic Analysis:\n");
-    //analyzeSemantics(ast);
+    // analyzeSemantics(ast);
 
     printf("\nGenerated Code:\n");
-    //generateCode(ast);
+    // generateCode(ast);
 
     return 0;
 }

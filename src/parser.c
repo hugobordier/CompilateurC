@@ -1,6 +1,6 @@
 #include "parser.h"
+#include "ast.h"
 #include "lexer.h"
-#include "ast.h" 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -55,12 +55,14 @@ ASTNode *parseStatement(const char *source, int *index) {
 
             Token next = getNextToken(source, index);
             if (next.type == TOKEN_ASSIGNATION) {
-                node->data.var_decl.initial_value = parseExpression(source, index);
+                node->data.var_decl.initial_value =
+                    parseExpression(source, index);
             }
 
             return node;
         } else {
-            fprintf(stderr, "Error: Expected identifier after type declaration\n");
+            fprintf(stderr,
+                    "Error: Expected identifier after type declaration\n");
             exit(1);
         }
     }
@@ -76,7 +78,8 @@ ASTNode *parseStatement(const char *source, int *index) {
             // Function call
             ASTNode *node = createNode(NODE_FUNCTION_CALL);
             node->data.function_call.function_name = token.value;
-            node->data.function_call.arguments = parseArguments(source, index, &node->data.function_call.arg_count);
+            node->data.function_call.arguments = parseArguments(
+                source, index, &node->data.function_call.arg_count);
             return node;
         } else {
             fprintf(stderr, "Error: Expected '=' or '(' after identifier\n");
@@ -89,14 +92,14 @@ ASTNode *parseStatement(const char *source, int *index) {
         ASTNode *node = createNode(NODE_IF_STATEMENT);
         node->data.if_statement.condition = parseExpression(source, index);
         node->data.if_statement.then_branch = parseBlock(source, index);
-        
+
         Token next_token = getNextToken(source, index);
         if (next_token.type == TOKEN_ELSE) {
             node->data.if_statement.else_branch = parseBlock(source, index);
         } else {
             (*index)--;
         }
-        
+
         return node;
     }
 
@@ -123,8 +126,9 @@ ASTNode **parseArguments(const char *source, int *index, int *arg_count) {
                 ASTNode *arg = createNode(NODE_VAR_DECL);
                 arg->data.var_decl.var_name = token.value;
                 arg->data.var_decl.var_type = next_token.type;
-                
-                arg_list = realloc(arg_list, sizeof(ASTNode *) * (*arg_count + 1));
+
+                arg_list =
+                    realloc(arg_list, sizeof(ASTNode *) * (*arg_count + 1));
                 arg_list[*arg_count] = arg;
                 (*arg_count)++;
             }
@@ -140,15 +144,17 @@ ASTNode **parseArguments(const char *source, int *index, int *arg_count) {
 
 ASTNode *parseExpression(const char *source, int *index) {
     // Ici vous devez implémenter la logique de parsing des expressions
-    // Cela peut inclure des nombres, des opérateurs, des appels de fonction, etc.
-    // Pour simplifier, supposons que nous avons seulement des nombres pour l'instant
+    // Cela peut inclure des nombres, des opérateurs, des appels de fonction,
+    // etc. Pour simplifier, supposons que nous avons seulement des nombres pour
+    // l'instant
 
     Token token = getNextToken(source, index);
     if (token.type == TOKEN_NOMBRE || token.type == TOKEN_REEL) {
         ASTNode *node = createNode(NODE_EXPRESSION);
         // Créer un nœud pour la valeur
         ASTNode *value_node = createNode(NODE_EXPRESSION);
-        value_node->data.var_decl.var_name = token.value; // Utiliser un champ approprié pour stocker la valeur
+        value_node->data.var_decl.var_name =
+            token.value; // Utiliser un champ approprié pour stocker la valeur
         node->data.var_decl.initial_value = value_node; // Assignation correcte
         return node;
     }

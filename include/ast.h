@@ -56,9 +56,8 @@ typedef struct ASTNode {
         struct {
             struct ASTNode *return_value;
         } return_statement;
-        // Ajoutez d'autres structures de nœuds si nécessaire
-    } data;
-    struct ASTNode *next;
+    } data;//union called "data"
+    struct ASTNode *next;//and a pointer pointing to the next ASTNode
 } ASTNode;
 
 ASTNode *createNode(ASTNodeType type);
