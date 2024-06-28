@@ -1,4 +1,7 @@
 #include "utils.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 const char *tokenTypeToString(TokenType type) {
     switch (type) {
@@ -15,4 +18,17 @@ const char *tokenTypeToString(TokenType type) {
     default:
         return "unknown";
     }
+}
+
+char *charArrayToString(char array[]) {
+    size_t length = strlen(array);
+    char *str = (char *)malloc(length + 1);
+
+    if (str == NULL) {
+        printf("Allocation error in charArrayToString\n");
+        return NULL;
+    }
+
+    strcpy(str, array);
+    return str;
 }

@@ -29,17 +29,12 @@ char *readFile(const char *filename) {
 }
 
 int main() {
-    const char *source = " 3 + 5 * (10 - 4) / 2"; // nombre a =
+    const char *source = "nombre a = 3 + 5 * (10 - 4) / 2 ;"; // nombre a =
     // const char *source = readFile("tests/test1.txt");
     printf("Lexing:\n");
     printLexer(source);
 
     printf("\nSyntaxic analysis: \n");
-    Parser parser = createParser(source);
-    ASTNode *ast = parse(&parser);
-    printAST(ast, 0);
-    destroyAST(ast);
-    destroyParser(&parser);
 
     printf("\nSemantic Analysis:\n");
     // analyzeSemantics(ast);

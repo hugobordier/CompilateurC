@@ -83,7 +83,7 @@ void analyzeAST(ASTNode *root) {
     }
 
     // Analyser récursivement les enfants
-    for (int i = 0; i < root->childrenCount; i++) {
+    for (int i = 0; i < root->children_count; i++) {
         analyzeAST(root->children[i]);
     }
 }
