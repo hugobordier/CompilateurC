@@ -119,72 +119,59 @@ void printFunctionCallExpr(ASTNode *node, int indent) {
 }
 
 void printAST(ASTNode *node, int indent) {
-    if (!node) return;
+    if (!node)
+        return;
 
     switch (node->type) {
-        case NODE_BINARY_EXPRESSION:
-            printBinaryExpr(node, indent);
-            break;
-        case NODE_UNARY_EXPRESSION:
-            printUnaryExpr(node, indent);
-            break;
-        case NODE_FUNCTION_DECL_PROGRAM:
-            printFunctionDecl(node, indent);
-            break;
-        case NODE_COMPOUND_STMT:
-            printCompoundStmt(node, indent);
-            break;
-        case NODE_CONDITIONAL_STMT:
-            printConditionalStmt(node, indent);
-            break;
-        case NODE_LOOP_STMT:
-            printLoopStmt(node, indent);
-            break;
-        case NODE_RETURN_STMT:
-            printReturnStmt(node, indent);
-            break;
-        case NODE_VARIABLE_DEFINITION:
-            printVariableDefinition(node, indent);
-            break;
-        case NODE_EXPRESSION_STMT:
-            printExpressionStmt(node, indent);
-            break;
-        case NODE_INTEGER_LITERAL_EXPRESSION:
-            printIntegerLiteralExpr(node, indent);
-            break;
-        case NODE_STRING_LITERAL_EXPRESSION:
-            printStringLiteralExpr(node, indent);
-            break;
-        case NODE_IDENTIFIER_EXPRESSION:
-            printIdentifierExpr(node, indent);
-            break;
-        case NODE_INDEXING_EXPRESSION:
-            printIndexingExpr(node, indent);
-            break;
-        case NODE_FUNCTION_CALL_EXPRESSION:
-            printFunctionCallExpr(node, indent);
-            break;
-        case NODE_NOOP_STMT:
-            printIndent(indent);
-            printf("No-op Statement\n");
-            break;
-        default:
-            printIndent(indent);
-            printf("Unknown node type\n");
-            break;
+    case NODE_BINARY_EXPRESSION:
+        printBinaryExpr(node, indent);
+        break;
+    case NODE_UNARY_EXPRESSION:
+        printUnaryExpr(node, indent);
+        break;
+    case NODE_FUNCTION_DECL_PROGRAM:
+        printFunctionDecl(node, indent);
+        break;
+    case NODE_COMPOUND_STMT:
+        printCompoundStmt(node, indent);
+        break;
+    case NODE_CONDITIONAL_STMT:
+        printConditionalStmt(node, indent);
+        break;
+    case NODE_LOOP_STMT:
+        printLoopStmt(node, indent);
+        break;
+    case NODE_RETURN_STMT:
+        printReturnStmt(node, indent);
+        break;
+    case NODE_VARIABLE_DEFINITION:
+        printVariableDefinition(node, indent);
+        break;
+    case NODE_EXPRESSION_STMT:
+        printExpressionStmt(node, indent);
+        break;
+    case NODE_INTEGER_LITERAL_EXPRESSION:
+        printIntegerLiteralExpr(node, indent);
+        break;
+    case NODE_STRING_LITERAL_EXPRESSION:
+        printStringLiteralExpr(node, indent);
+        break;
+    case NODE_IDENTIFIER_EXPRESSION:
+        printIdentifierExpr(node, indent);
+        break;
+    case NODE_INDEXING_EXPRESSION:
+        printIndexingExpr(node, indent);
+        break;
+    case NODE_FUNCTION_CALL_EXPRESSION:
+        printFunctionCallExpr(node, indent);
+        break;
+    case NODE_NOOP_STMT:
+        printIndent(indent);
+        printf("No-op Statement\n");
+        break;
+    default:
+        printIndent(indent);
+        printf("Unknown node type\n");
+        break;
     }
-}
-
-int main() {
-    // Example usage
-    // You would normally build the AST from your parser, but here we'll manually create one for demonstration.
-
-    // Integer literal expression
-    ASTNode intLiteral = { .type = NODE_INTEGER_LITERAL_EXPRESSION };
-    intLiteral.data.integer_literal_expr.value = 42;
-
-    // Print the AST
-    printAST(&intLiteral, 0);
-
-    return 0;
 }
