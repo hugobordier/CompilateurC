@@ -49,11 +49,6 @@ typedef enum {
     TOKEN_COMM,//40
     TOKEN_UNKNOWN,
 } TokenType;
-
-
-
-
-
 typedef struct {
     TokenType type;
     char *value;

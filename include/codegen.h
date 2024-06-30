@@ -3,6 +3,6 @@
 
 #include "ast.h"
 
-void generateCode(ASTNode *root);
+
 
 #endif 

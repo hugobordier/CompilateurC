@@ -1,94 +1,123 @@
 #ifndef AST_H
 #define AST_H
 
+#include "lexer.h"
 typedef enum {
-    // Principal Node Types
-    NODE_FUNCTION,
-    NODE_EXPRESSION,
-    NODE_STMT,
-    NODE_PROGRAM,
-} NODETypePrimary;
+    NODE_TYPE_PROGRAM,
+    NODE_TYPE_FUNCTION,
+    NODE_TYPE_STATEMENT,
+    NODE_TYPE_EXPRESSION,
+} NodeType;
 
 typedef enum {
-    // Detailed Node Types
-    NODE_FUNCTION_DECL_PROGRAM,
-    NODE_PARAMETER_FUNCTION,
-    NODE_COMPOUND_STMT,
-    NODE_CONDITIONAL_STMT,
-    NODE_LOOP_STMT,
-    NODE_RETURN_STMT,
-    NODE_VARIABLE_DEFINITION,
-    NODE_EXPRESSION_STMT,
-    NODE_NOOP_STMT,
-    NODE_INTEGER_LITERAL_EXPRESSION,
-    NODE_STRING_LITERAL_EXPRESSION,
-    NODE_IDENTIFIER_EXPRESSION,
-    NODE_INDEXING_EXPRESSION,
-    NODE_FUNCTION_CALL_EXPRESSION,
-    NODE_BINARY_EXPRESSION,
-    NODE_UNARY_EXPRESSION,
-} NODEType;
+    STATEMENT_IF,
+    STATEMENT_WHILE,
+    STATEMENT_FOR,
+    STATEMENT_RETURN,
+    STATEMENT_EXPRESSION,
+} StatementType;
+
+typedef enum {
+    EXPRESSION_BINARY,
+    EXPRESSION_UNARY,
+    EXPRESSION_LITERAL,
+    EXPRESSION_VARIABLE,
+    EXPRESSION_ASSIGNMENT,
+    EXPRESSION_FUNCTION_CALL,
+} ExpressionType;
+
+typedef enum {
+    FUNCTION_DECL,
+} FunctionType;
+
+typedef enum {
+    PROGRAM_DECL,
+} ProgramType;
 
 typedef struct ASTNode {
-    NODEType type;
+    NodeType type;
     union {
         struct {
-            struct ASTNode *left;
-            struct ASTNode *right;
-            char *operation;
-        } binary_expr;
+            struct ASTNode **functions;//liste de fonction pcq astnode c deja une liste dcp la on veut une liste dans un noeud dcp double pointer
+            int function_count;
+        } node_program;
+
         struct {
-            struct ASTNode *operand;
-            char *operation;
-        } unary_expr;
-        struct {
-            char *name;
+            Token name;
             struct ASTNode **parameters;
-            int parameter_count;
-            struct ASTNode *body;
-        } function_decl;
+            int param_count;
+            struct ASTNode *body;// need to be a stmt
+        } node_function;
+
         struct {
-            struct ASTNode **statements;
-            int statement_count;
-        } compound_stmt;
+            StatementType statement_type;
+            union {
+                struct {
+                    struct ASTNode *condition;// need to be a expression between parentheses
+                    struct ASTNode *then_branch;  //need to be a stmt  
+                    //struct ASTNode *else_branch; //stmt 
+                } if_stmt;
+
+                struct {
+                    struct ASTNode *condition;//expression
+                    struct ASTNode *body;//stmt 
+                } while_stmt;
+
+                struct {
+                    struct ASTNode *init;//expr
+                    struct ASTNode *condition;//expr
+                    struct ASTNode *update;//expr
+                    struct ASTNode *body;//stmt
+                } for_stmt;
+
+                struct {
+                    struct ASTNode *value;//expr
+                } return_stmt;
+
+                struct {
+                    struct ASTNode *expression;
+                } expression_stmt;
+            };
+        } node_statement;
+
         struct {
-            struct ASTNode *condition;
-            struct ASTNode *then_branch;
-            struct ASTNode *else_branch;
-        } conditional_stmt;
-        struct {
-            struct ASTNode *condition;
-            struct ASTNode *body;
-        } loop_stmt;
-        struct {
-            struct ASTNode *value;
-        } return_stmt;
-        struct {
-            char *name;
-            struct ASTNode *initializer;
-        } variable_definition;
-        struct {
-            struct ASTNode *expression;
-        } expression_stmt;
-        struct {
-            int value;
-        } integer_literal_expr;
-        struct {
-            char *value;
-        } string_literal_expr;
-        struct {
-            char *name;
-        } identifier_expr;
-        struct {
-            struct ASTNode *array;
-            struct ASTNode *index;
-        } indexing_expr;
-        struct {
-            char *name;
-            struct ASTNode **arguments;
-            int argument_count;
-        } function_call_expr;
-    } data;
+            ExpressionType expression_type;
+            union {
+                struct {
+                    struct ASTNode *left;//expr
+                    struct ASTNode *right;//expr
+                    TokenType op; // type d'opérateur
+                } binary_expr;
+
+                struct {
+                    struct ASTNode *operand;
+                    TokenType op; 
+                } unary_expr;
+
+                struct {
+                    Token value;
+                } literal_expr;
+
+                struct {
+                    Token name;
+                } variable_expr;
+
+                struct {
+                    struct ASTNode *left;
+                    struct ASTNode *right;
+                } assignment_expr;
+
+                struct {
+                    Token function_name;
+                    struct ASTNode **arguments;
+                    int arg_count;
+                } function_call_expr;
+            };
+        } node_expression;
+    };
 } ASTNode;
 
-#endif
+ASTNode* create_ast_node(NodeType type);
+void free_ast_node(ASTNode *node);
+
+#endif 
