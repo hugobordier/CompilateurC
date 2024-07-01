@@ -34,7 +34,16 @@ int main() {
     printf("Lexing:\n");
     printLexer(source);
 
-    printf("\nSyntaxic analysis: \n");
+    Token *tokens = tokenize(source);
+    int token_count = 0;
+
+    Parser *parser = create_parser(tokens, token_count);
+    ASTNode *ast = parse_program(parser);
+
+    printf("\nAST:\n");
+    print_ast(ast, 0);
+    free_ast_node(ast);
+    free_parser(parser);
 
     printf("\nSemantic Analysis:\n");
     // analyzeSemantics(ast);

@@ -119,5 +119,6 @@ typedef struct ASTNode {
 
 ASTNode* create_ast_node(NodeType type);
 void free_ast_node(ASTNode *node);
+void print_ast_node(ASTNode *node, int indent);
 
-#endif 
+#endif

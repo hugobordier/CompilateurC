@@ -47,6 +47,7 @@ typedef enum {
     TOKEN_SEMICOLON,
     TOKEN_COMMA,
     TOKEN_COMM,//40
+    TOKEN_RETURN,
     TOKEN_UNKNOWN,
 } TokenType;
 typedef struct {

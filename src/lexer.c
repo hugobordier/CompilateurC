@@ -83,6 +83,8 @@ Token getNextToken(const char *source, int *index) {
             return (Token){TOKEN_CATCH, text};
         if (strcmp(text, "fonction") == 0)
             return (Token){TOKEN_FONCTION, text};
+        if (strcmp(text, "retourne") == 0)
+            return (Token){TOKEN_RETURN, text};
 
         return (Token){TOKEN_IDENT, text};
     }
