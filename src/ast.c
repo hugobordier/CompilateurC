@@ -13,11 +13,14 @@ ASTNode *create_ast_node(NodeType type) {
 }
 
 void free_ast_node(ASTNode *node) {
+    printf("rentre dans la fonction free");
     if (!node)
-        return;
+        printf("pas de node");
+    return;
 
     switch (node->type) {
     case NODE_TYPE_PROGRAM:
+        printf("rentre dans le type program");
         for (int i = 0; i < node->node_program.function_count; ++i) {
             free_ast_node(node->node_program.functions[i]);
         }
@@ -103,8 +106,10 @@ void free_ast_node(ASTNode *node) {
 }
 
 void print_ast_node(ASTNode *node, int indent) {
+    printf("indent:%d\n", indent);
     if (!node)
-        return;
+        printf("pas de node");
+    return;
 
     for (int i = 0; i < indent; ++i) {
         printf("  ");

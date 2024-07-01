@@ -1,18 +1,27 @@
 #include "parser.h"
+#include "ast.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-Parser *create_parser(Token *tokens, int count) {
-    Parser *parser = (Parser *)malloc(sizeof(Parser));
+Parser *create_parser(Token *tokens, int token_count) {
+    Parser *parser = malloc(sizeof(Parser));
     parser->tokens = tokens;
     parser->current = 0;
-    parser->count = count;
+    parser->count = token_count;
     return parser;
 }
 
 void free_parser(Parser *parser) {
     free(parser->tokens);
     free(parser);
+}
+
+Token *get_current_token(Parser *parser) {
+    if (parser->current < parser->count) {
+        return &parser->tokens[parser->current];
+    }
+    return NULL;
 }
 
 Token *advance(Parser *parser) {
@@ -22,197 +31,81 @@ Token *advance(Parser *parser) {
     return NULL;
 }
 
-Token *peek(Parser *parser) {
-    if (parser->current < parser->count) {
-        return &parser->tokens[parser->current];
+ASTNode *parse_expression(Parser *parser) {
+    Token *current_token = get_current_token(parser);
+    if (current_token->type == TOKEN_NOMBRE) {
+        ASTNode *node = create_ast_node(NODE_TYPE_EXPRESSION);
+        node->node_expression.expression_type = EXPRESSION_LITERAL;
+        node->node_expression.literal_expr.value = *current_token;
+        advance(parser);
+        return node;
     }
+    // Ajoutez d'autres types d'expressions ici si nécessaire
     return NULL;
 }
 
-int match(Parser *parser, TokenType type) {
-    if (peek(parser)->type == type) {
-        advance(parser);
-        return 1;
+ASTNode *parse_statement(Parser *parser) {
+    Token *current_token = get_current_token(parser);
+    if (current_token->type == TOKEN_IDENT &&
+        strcmp(current_token->value, "retourne") == 0) {
+        advance(parser); // Consommez "retourne"
+        ASTNode *value = parse_expression(parser);
+        if (value != NULL) {
+            ASTNode *node = create_ast_node(NODE_TYPE_STATEMENT);
+            node->node_statement.statement_type = STATEMENT_RETURN;
+            node->node_statement.return_stmt.value = value;
+            return node;
+        }
     }
-    return 0;
-}
-
-ASTNode *parse_statement(Parser *parser);
-ASTNode *parse_expression(Parser *parser);
-
-ASTNode *parse_program(Parser *parser) {
-    ASTNode *node = create_ast_node(NODE_TYPE_PROGRAM);
-    node->node_program.function_count = 0;
-    node->node_program.functions = NULL;
-
-    while (parser->current < parser->count && peek(parser)->type != TOKEN_EOF) {
-        ASTNode *function = parse_statement(parser);
-        node->node_program.function_count++;
-        node->node_program.functions =
-            realloc(node->node_program.functions,
-                    sizeof(ASTNode *) * node->node_program.function_count);
-        node->node_program.functions[node->node_program.function_count - 1] =
-            function;
-    }
-
-    return node;
+    // Ajoutez d'autres types de statements ici si nécessaire
+    return NULL;
 }
 
 ASTNode *parse_function(Parser *parser) {
-    if (!match(parser, TOKEN_FONCTION)) {
-        fprintf(stderr, "Expected 'fonction' keyword\n");
+    Token *type_token = advance(parser); // Consommez le type de retour
+    if (type_token->type < TOKEN_TYPE_NOMBRE ||
+        type_token->type > TOKEN_TYPE_BOOLEAN) {
+        fprintf(stderr, "Erreur: Type de retour de fonction invalide.\n");
         exit(EXIT_FAILURE);
     }
 
-    Token *name = advance(parser);
-    if (name->type != TOKEN_IDENT) {
-        fprintf(stderr, "Expected function name\n");
+    Token *name_token = advance(parser); // Consommez le nom de la fonction
+    if (name_token->type != TOKEN_IDENT) {
+        fprintf(stderr, "Erreur: Nom de fonction attendu.\n");
         exit(EXIT_FAILURE);
     }
 
-    if (!match(parser, TOKEN_PAR_OUVRANTE)) {
-        fprintf(stderr, "Expected '('\n");
-        exit(EXIT_FAILURE);
-    }
+    ASTNode *function = create_ast_node(NODE_TYPE_FUNCTION);
+    function->node_function.name = *name_token;
+    function->node_function.param_count = 0;
+    function->node_function.parameters = NULL;
 
-    ASTNode *node = create_ast_node(NODE_TYPE_FUNCTION);
-    node->node_function.name = *name;
-    node->node_function.param_count = 0;
-    node->node_function.parameters = NULL;
+    advance(parser); // Consommez '('
+    // Analysez les paramètres si nécessaire
+    advance(parser); // Consommez ')'
+    advance(parser); // Consommez '{'
 
-    while (!match(parser, TOKEN_PAR_FERMANTE)) {
-        if (node->node_function.param_count > 0) {
-            if (!match(parser, TOKEN_COMMA)) {
-                fprintf(stderr, "Expected ',' between parameters\n");
-                exit(EXIT_FAILURE);
-            }
-        }
+    function->node_function.body = parse_statement(parser);
 
-        Token *param = advance(parser);
-        if (param->type != TOKEN_IDENT) {
-            fprintf(stderr, "Expected parameter name\n");
-            exit(EXIT_FAILURE);
-        }
+    advance(parser); // Consommez '}'
 
-        node->node_function.param_count++;
-        node->node_function.parameters =
-            realloc(node->node_function.parameters,
-                    sizeof(ASTNode *) * node->node_function.param_count);
-        node->node_function.parameters[node->node_function.param_count - 1] =
-            create_ast_node(NODE_TYPE_EXPRESSION);
-        node->node_function.parameters[node->node_function.param_count - 1]
-            ->node_expression.expression_type = EXPRESSION_VARIABLE;
-        node->node_function.parameters[node->node_function.param_count - 1]
-            ->node_expression.variable_expr.name = *param;
-    }
-
-    node->node_function.body = parse_statement(parser);
-    return node;
+    return function;
 }
 
-ASTNode *parse_statement(Parser *parser) {
-    if (match(parser, TOKEN_IF)) {
-        ASTNode *node = create_ast_node(NODE_TYPE_STATEMENT);
-        node->node_statement.statement_type = STATEMENT_IF;
+ASTNode *parse_program(Parser *parser) {
+    ASTNode *program = create_ast_node(NODE_TYPE_PROGRAM);
+    program->node_program.function_count = 0;
+    program->node_program.functions = NULL;
 
-        if (!match(parser, TOKEN_PAR_OUVRANTE)) {
-            fprintf(stderr, "Expected '('\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.if_stmt.condition = parse_expression(parser);
-
-        if (!match(parser, TOKEN_PAR_FERMANTE)) {
-            fprintf(stderr, "Expected ')'\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.if_stmt.then_branch = parse_statement(parser);
-        // Handle optional else branch
-        return node;
+    while (parser->current < parser->count - 1) {
+        ASTNode *function = parse_function(parser);
+        program->node_program.function_count++;
+        program->node_program.functions =
+            realloc(program->node_program.functions,
+                    program->node_program.function_count * sizeof(ASTNode *));
+        program->node_program
+            .functions[program->node_program.function_count - 1] = function;
     }
 
-    if (match(parser, TOKEN_WHILE)) {
-        ASTNode *node = create_ast_node(NODE_TYPE_STATEMENT);
-        node->node_statement.statement_type = STATEMENT_WHILE;
-
-        if (!match(parser, TOKEN_PAR_OUVRANTE)) {
-            fprintf(stderr, "Expected '('\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.while_stmt.condition = parse_expression(parser);
-
-        if (!match(parser, TOKEN_PAR_FERMANTE)) {
-            fprintf(stderr, "Expected ')'\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.while_stmt.body = parse_statement(parser);
-        return node;
-    }
-
-    if (match(parser, TOKEN_FOR)) {
-        ASTNode *node = create_ast_node(NODE_TYPE_STATEMENT);
-        node->node_statement.statement_type = STATEMENT_FOR;
-
-        if (!match(parser, TOKEN_PAR_OUVRANTE)) {
-            fprintf(stderr, "Expected '('\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.for_stmt.init = parse_expression(parser);
-        if (!match(parser, TOKEN_SEMICOLON)) {
-            fprintf(stderr, "Expected ';'\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.for_stmt.condition = parse_expression(parser);
-        if (!match(parser, TOKEN_SEMICOLON)) {
-            fprintf(stderr, "Expected ';'\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.for_stmt.update = parse_expression(parser);
-
-        if (!match(parser, TOKEN_PAR_FERMANTE)) {
-            fprintf(stderr, "Expected ')'\n");
-            exit(EXIT_FAILURE);
-        }
-
-        node->node_statement.for_stmt.body = parse_statement(parser);
-        return node;
-    }
-
-    if (match(parser, TOKEN_RETURN)) {
-        ASTNode *node = create_ast_node(NODE_TYPE_STATEMENT);
-        node->node_statement.statement_type = STATEMENT_RETURN;
-        node->node_statement.return_stmt.value = parse_expression(parser);
-        if (!match(parser, TOKEN_SEMICOLON)) {
-            fprintf(stderr, "Expected ';'\n");
-            exit(EXIT_FAILURE);
-        }
-        return node;
-    }
-
-    ASTNode *expression_stmt = create_ast_node(NODE_TYPE_STATEMENT);
-    expression_stmt->node_statement.statement_type = STATEMENT_EXPRESSION;
-    expression_stmt->node_statement.expression_stmt.expression =
-        parse_expression(parser);
-    if (!match(parser, TOKEN_SEMICOLON)) {
-        fprintf(stderr, "Expected ';'\n");
-        exit(EXIT_FAILURE);
-    }
-    return expression_stmt;
+    return program;
 }
-
-ASTNode *parse_expression(Parser *parser) {
-    // Implement expression parsing (similar to parse_binary_expression, etc.)
-    // This is a placeholder and needs to be expanded with actual logic
-    ASTNode *node = create_ast_node(NODE_TYPE_EXPRESSION);
-    node->node_expression.expression_type = EXPRESSION_LITERAL;
-    node->node_expression.literal_expr.value = *advance(parser);
-    return node;
-}
-
-void print_ast(ASTNode *node, int indent) { print_ast_node(node, indent); }

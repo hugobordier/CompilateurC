@@ -181,7 +181,7 @@ void printLexer(const char *source) {
     }
 }
 
-Token *tokenize(const char *source) {
+Token *tokenize(const char *source, int *token_count) {
     int index = 0;
     int capacity = 10; // initial capacity for tokens array
     int size = 0;      // current size of tokens array
@@ -191,13 +191,8 @@ Token *tokenize(const char *source) {
         fprintf(stderr, "Memory allocation failed.\n");
         exit(EXIT_FAILURE);
     }
-
-    // Loop through the source string and tokenize
     while (1) {
-        // Get the next token
         Token token = getNextToken(source, &index);
-
-        // Check if we need to resize tokens array
         if (size >= capacity) {
             capacity *= 2;
             tokens = realloc(tokens, capacity * sizeof(Token));
@@ -206,18 +201,12 @@ Token *tokenize(const char *source) {
                 exit(EXIT_FAILURE);
             }
         }
-
-        // Add token to tokens array
         tokens[size++] = token;
-
-        // Check for end of source
         if (token.type == TOKEN_EOF) {
             break;
         }
     }
-
-    // Resize tokens array to actual size
     tokens = realloc(tokens, size * sizeof(Token));
-
+    *token_count = size;
     return tokens;
 }

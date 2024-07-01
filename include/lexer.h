@@ -57,6 +57,6 @@ typedef struct {
 
 Token getNextToken(const char *source, int *index);
 void printLexer(const char *source);
-Token *tokenize(const char* source);
+Token *tokenize(const char* source,int *token_count);
 
 #endif 

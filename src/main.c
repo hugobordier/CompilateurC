@@ -29,27 +29,26 @@ char *readFile(const char *filename) {
 }
 
 int main() {
-    const char *source = "nombre a = 3 + 5 * (10 - 4) / 2 ;"; // nombre a =
+    const char *source = "nombre main(){retourne 0;}"; // nombre a =
     // const char *source = readFile("tests/test1.txt");
-    printf("Lexing:\n");
-    printLexer(source);
+    // printf("Lexing:\n");
+    // printLexer(source);
 
-    Token *tokens = tokenize(source);
-    int token_count = 0;
+    int token_count;
+    Token *tokens = tokenize(source, &token_count);
 
     Parser *parser = create_parser(tokens, token_count);
     ASTNode *ast = parse_program(parser);
 
     printf("\nAST:\n");
-    print_ast(ast, 0);
+    print_ast_node(ast, 0);
     free_ast_node(ast);
     free_parser(parser);
 
-    printf("\nSemantic Analysis:\n");
-    // analyzeSemantics(ast);
-
-    printf("\nGenerated Code:\n");
-    // generateCode(ast);
-
     return 0;
 }
+// printf("\nSemantic Analysis:\n");
+//  analyzeSemantics(ast);
+
+// printf("\nGenerated Code:\n");
+// generateCode(ast);

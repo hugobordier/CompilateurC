@@ -14,5 +14,6 @@ Parser* create_parser(Token *tokens, int count);
 void free_parser(Parser *parser);
 ASTNode* parse_program(Parser *parser);
 void print_ast(ASTNode *node, int indent);
+ASTNode* parse_function(Parser *parser);
 
 #endif
